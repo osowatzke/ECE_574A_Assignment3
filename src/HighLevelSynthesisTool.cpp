@@ -7,10 +7,20 @@ using namespace std;
 
 namespace HighLevelSynthesis
 {
+    HighLevelSynthesisTool::HighLevelSynthesisTool()
+        : dataManager(DataManager())
+        , fileParser(FileParser(&dataManager)){}
+
     // Dummy run function. Populate with actual function calls once they are created.
     int HighLevelSynthesisTool::run(string cFile, int latency, string verilogFile)
     {
         cout << "Generating verilog file \"" << verilogFile << "\" from \"" << cFile << "\" with latency constraint of " << latency << " cycles." << endl;
+        int retVal = fileParser.run(cFile);
+        if (retVal)
+        {
+            return retVal;
+        }
+        dataManager.printGraph();
         return 0;
     }
 } // namespace HighLevelSynthesis
