@@ -27,25 +27,18 @@ int FileParser::run(string filePath)
     // Strip comments from lines
     removeComments();
 
+    // Read nets (inputs, outputs, registers, and wires in output file)
     readNets();
 
+    // Get starting graph edges (file inputs)
     getInitialGraphEdges();
 
+    // Get graph vertices
     getVertices();
 
-    // getGraphEdges();
+    retVal = checkForUndefinedNets();
 
-    // getVertices();
-
-    /*auto begin = activeEdges.begin();
-    auto end = activeEdges.end();
-
-    for (auto& it = begin; it != end; ++it)
-    {
-        cout << it->first << endl;
-    }*/
-
-    return 0;
+    return retVal;
 }
 
 // Function reads lines from the input file
@@ -95,6 +88,7 @@ void FileParser::removeComments()
     }
 }
 
+// Function reads nets from input file
 void FileParser::readNets()
 {
     for (string& line : lines)
@@ -103,10 +97,11 @@ void FileParser::readNets()
     }
 }
 
+// Function reads nets from line in input file
 void FileParser::readNetsFromLine(string line)
 {
-    // Regular expression to match wire
-    // Wires are the union of all inputs, outputs, wires, and registers
+    // Regular expression to match net
+    // Nets are the union of all inputs, outputs, and variables
     smatch netsLineMatch;
     const regex netsLinePattern{"^\\s*(input|output|variable)\\s*(U?)Int(\\d+)\\s+(.*)$"};
     regex_match(line, netsLineMatch, netsLinePattern);
@@ -114,16 +109,16 @@ void FileParser::readNetsFromLine(string line)
     // If line matches regular expression  
     if (!netsLineMatch.empty())
     {
-        // Extract sign and width of wires
+        // Extract sign and width of nets
         NetType type = stringToNetType(netsLineMatch.str(1));
         bool isSigned = (netsLineMatch.str(2) != "U");
         int width = stoi(netsLineMatch.str(3));
 
-        // Regular expression to match individual wire names
+        // Regular expression to match individual net names
         string netsSubstring = netsLineMatch.str(4);
         regex netsPattern{"(\\w+)\\s*(?:,|$)"};
 
-        // Create a wire structure for each name that is found
+        // Create a net structure for each name that is found
         sregex_iterator start = sregex_iterator(netsSubstring.begin(), netsSubstring.end(), netsPattern);
         sregex_iterator end = sregex_iterator();
         for (sregex_iterator i = start; i != end; ++i)
@@ -143,18 +138,14 @@ void FileParser::readNetsFromLine(string line)
                 newNet->isSigned = false;
             }
 
-            // Update wires in data manager
+            // Update nets in data manager
             string netName = netsMatch.str(1);
-            dataManager->nets[netName] = newNet; //.push_back(newNet);
-
-            // Add wire to wire table
-            // string edgeName = edgeMatch.str(1);
-            // activeEdges[edgeName] = newEdge;
-            // activeEdges.insert({edgeName, newEdge});
+            dataManager->nets[netName] = newNet;
         }
     }
 }
 
+// Function gets the initial graph edges (input nets)
 void FileParser::getInitialGraphEdges()
 {
     auto netStart = dataManager->nets.begin();
@@ -170,219 +161,16 @@ void FileParser::getInitialGraphEdges()
     }
 }
 
-/*void FileParser::updateConditionalState(string line)
-{
-    smatch ifMatch;
-    const regex ifPattern{"^\\s*if\\s*\\(?\\s*(\\w+)\\s*\\)?\\s*{\\s*$"};
-    regex_match(line, ifMatch, ifPattern);
-    if (!ifMatch.empty())
-    {
-        string inputName = ifMatch.str(0);
-        string operation = "if ( " + inputName + " )";
-        edge* input = getEdge(ifMatch.str(1));
-        edge* output = new edge;
-        dataManager->edges.push_back(output);
-        vertex* newVertex = createVertex(VertexType::FORK, operation, {input}, {output});
-        conditionalStart.push_back(newVertex);
-        conditionalState.push_back(true);
-        formerEdges.push_back(activeEdges);
-        newVertex = new vertex;
-        newVertex->type = VertexType::JOIN;
-        newVertex->operation = "";
-        dataManager->vertices.push_back(newVertex);
-        conditionalEnd.push_back(newVertex);
-    }
-    smatch elseMatch;
-    const regex elsePattern{"^\\s*else\\s*{\\s*$"};
-    regex_match(line, elseMatch, elsePattern);
-    if (!elseMatch.empty())
-    {
-        conditionalStart.push_back(lastConditionalStart);
-        conditionalEnd.push_back(lastConditionalEnd);
-        conditionalState.push_back(false);
-        formerEdges.push_back(activeEdges);
-    }
-    smatch braceMatch;
-    const regex bracePattern{"^\\s*}\\s*$"};
-    regex_match(line, braceMatch, bracePattern);
-    if (!braceMatch.empty())
-    {
-        lastConditionalStart = conditionalStart.back();
-        lastConditionalEnd = conditionalEnd.back();
-        conditionalStart.pop_back();
-        conditionalEnd.pop_back();
-        conditionalState.pop_back();
-        map<string, edge*> oldEdges = formerEdges.back();
-        formerEdges.pop_back();
-        auto start = oldEdges.begin();
-        auto end = oldEdges.end();
-        vector<bool> validInput(lastConditionalEnd->inputs.size(), true);
-        for (size_t i = 0; i < lastConditionalEnd->inputs.size(); ++i)
-        {
-            edge* input = lastConditionalEnd->inputs[i];
-            for (auto it = start; it != end; ++it)
-            {
-                if (it->second == input)
-                {
-                    validInput[i] = false;
-                }
-            }
-        }
-        vector<edge*> inputsCopy = lastConditionalEnd->inputs;
-        lastConditionalEnd->inputs = {};
-        for (size_t i = 0; i < inputsCopy.size(); ++ i)
-        {
-
-        }
-        for (size_t i = 0; i < lastConditionalEnd->)
-        for (size_t i = 0; i < lastConditionalEnd->inputs.size(); ++i)
-        {
-            edge* input = lastConditionalEnd->inputs[i];
-            for (auto it = start; it != end; ++it)
-            {
-                if (it->second == input)
-                {
-                    validInput[i] = false;
-                }
-            }
-        }
-    } 
-}*/
-// Function parses line for graph edges
-/*void parseLineForGraphEdges(line)
-{
-    // Regular expression to match wire
-    // Wires are the union of all inputs, outputs, wires, and registers
-    smatch multiEdgeMatch;
-    const regex multiEdgePattern{"^\\s*(input|output|variable)\\s*(U?)Int(\\d+)\\s+(.*)$"};
-    regex_match(line, multiEdgeMatch, multiEdgePattern);
-
-    // If line matches regular expression  
-    if (!multiEdgeMatch.empty())
-    {
-        // Extract sign and width of wires
-        WireType type = get_wire_type(multiEdgeMatch.str(1));
-        bool sign = (multiEdgeMatch.str(2) != "U");
-        int width = stoi(multiEdgeMatch.str(3));
-
-        // Regular expression to match individual wire names
-        string edgeSubstring = multiEdgeMatch.str(4);
-        regex edgePattern{"(\\w+)\\s*(?:,|$)"};
-
-        // Create a wire structure for each name that is found
-        sregex_iterator start = sregex_iterator(edgeSubstring.begin(), edgeSubstring.end(), edgePattern);
-        sregex_iterator end = sregex_iterator();
-        for (sregex_iterator i = start; i != end; ++i)
-        {
-            smatch edgeMatch = *i;
-            wire* newEdge = new edge;
-            newEdge->name = edgeMatch.str(1);
-            newEdge->type = type;
-            newEdge->width = width;
-
-            // Force single bit wires to be unsigned
-            if (newEdge->width > 1)
-            {
-                newEdge->sign = sign;
-            }
-            else
-            {
-                newEdge->sign = false;
-            }             
-            newEdge->src = NULL;
-
-            // Update wires in data manager
-            dataManager->wires.push_back(newEdge);
-        }
-    }*/
-
-/*void FileParser::getGraphEdges()
-{
-    for (string& line: lines)
-    {
-        getGraphEdgesFromLine(line);
-    }
-}
-
-void FileParser::getGraphEdgesFromLine(string line)
-{
-    // Regular expression to match wire
-    // Wires are the union of all inputs, outputs, wires, and registers
-    smatch edgeLineMatch;
-    const regex edgeLinePattern{"^\\s*(input|output|variable)\\s*(U?)Int(\\d+)\\s+(.*)$"};
-    regex_match(line, edgeLineMatch, edgeLinePattern);
-
-    // If line matches regular expression  
-    if (!edgeLineMatch.empty())
-    {
-        // Extract sign and width of wires
-        EdgeType type = stringToEdgeType(edgeLineMatch.str(1));
-        bool isSigned = (edgeLineMatch.str(2) != "U");
-        int width = stoi(edgeLineMatch.str(3));
-
-        // Regular expression to match individual wire names
-        string edgeSubstring = edgeLineMatch.str(4);
-        regex edgePattern{"(\\w+)\\s*(?:,|$)"};
-
-        // Create a wire structure for each name that is found
-        sregex_iterator start = sregex_iterator(edgeSubstring.begin(), edgeSubstring.end(), edgePattern);
-        sregex_iterator end = sregex_iterator();
-        for (sregex_iterator i = start; i != end; ++i)
-        {
-            smatch edgeMatch = *i;
-            edge* newEdge = new edge;
-            newEdge->type = type;
-            newEdge->width = width;
-
-            // Force single bit wires to be unsigned
-            if (newEdge->width > 1)
-            {
-                newEdge->isSigned = isSigned;
-            }
-            else
-            {
-                newEdge->isSigned = false;
-            }             
-            newEdge->src = NULL;
-
-            // Update wires in data manager
-            dataManager->edges.push_back(newEdge);
-
-            // Add wire to wire table
-            string edgeName = edgeMatch.str(1);
-            activeEdges[edgeName] = newEdge;
-            // activeEdges.insert({edgeName, newEdge});
-        }
-    }
-}*/
-
+// Function gets graph vertices
 void FileParser::getVertices()
 {
     for (string& line: lines)
     {
-        // updateConditionalState(line);
         getVerticesFromLine(line);
     }
 }
 
-/*void FileParser::updateActiveEdges(string line)
-{
-    smatch ifMatch;
-    const regex ifPattern{"^\\s*if\\s*\\(?\\s*(\\w+)\\s*\\)?\\s*$"};
-    regex_match(line, ifMatch, ifPattern);
-    if (!ifMatch.empty())
-    {
-        edge* newEdge = new edge;
-        dataManager->edges.push_back(newEdge);
-        condEdgeQueue.push(newEdge);
-        edgeQueue.push(activeEdges); 
-        vertex* newVertex = new vertex;
-        dataManager->vertices.push_back(newVertex);
-        activeEdge
-        newVertex->inputs.push_back()
-    }
-}*/
-
+// Function gets graph vertices from a line
 void FileParser::getVerticesFromLine(string line)
 {
     smatch vertexMatch;
@@ -437,11 +225,11 @@ void FileParser::getVerticesFromLine(string line)
     }
 }
 
+// Function gets a pointer to an edge and creates one if a pointer does not exist
 edge* FileParser::getEdge(string edgeName)
 {
     if (activeEdges.find(edgeName) == activeEdges.end())
     {
-        cout << edgeName << endl;
         edge* newEdge = createNewEdge(edgeName);
         if (dataManager->nets.find(edgeName) == dataManager->nets.end())
         {
@@ -451,6 +239,7 @@ edge* FileParser::getEdge(string edgeName)
     return activeEdges[edgeName];
 }
 
+// Function creates a vertex from names of inputs/outputs
 vertex* FileParser::createVertex(VertexType type, string operation, vector<string> inputNames, vector<string> outputNames)
 {
     vector<edge*> inputs;
@@ -472,6 +261,7 @@ vertex* FileParser::createVertex(VertexType type, string operation, vector<strin
     return createVertex(type, operation, inputs, outputs);
 }
 
+// Function creates vertex from pointers to input and output edges
 vertex* FileParser::createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs)
 {
     vertex* newVertex = new vertex;
@@ -487,100 +277,42 @@ vertex* FileParser::createVertex(VertexType type, string operation, vector<edge*
         newVertex->outputs.push_back(output);
         output->src = newVertex;        
     }
-    /*if (conditionalStart.empty())
-    {
-        newVertex->branch = NULL;
-        newVertex->cond = false;
-    }
-    else
-    {
-        newVertex->branch = conditionalStart.back();
-        newVertex->cond = conditionalState.back();
-        newVertex->inputs.push_back(newVertex->branch->outputs[0]);
-    }*/
     dataManager->vertices.push_back(newVertex);
     return newVertex;
 }
 
+// Function creates a new edge
 edge* FileParser::createNewEdge(string edgeName)
 {
     edge* newEdge = new edge;
-    cout << edgeName << endl;
     newEdge->src = NULL;
     dataManager->edges.push_back(newEdge);
     activeEdges[edgeName] = newEdge;
-    dataManager->printGraph();
     return newEdge;
 }
 
-/*void FileParser::reduceGraph()
+int FileParser::checkForUndefinedNets()
 {
-    for (vertex*& currVertex : dataManager->vertices)
+    if (missingEdges.empty())
     {
-        vector<edge*> edgesCopy = currVertex->inputs;
-        for (edge*& input : currVertex->inputs)
-        {
-            vector<edge*> implicitEdges = getImplicitEdges(input);
-            getUnion(implicitEdges, currVertex->inputs);
-            for (edge*& input : currVertex->inputs)
-            {
-
-            }
-            for (edge*& implicitEdge : implicitEdges)
-            {
-                for (edge*& currEdge : edgesCopy)
-                {
-                    if (implicitEdge == currEdge)
-                    {
-
-                    }
-                }
-            }
-        }
+        return 0;
     }
-}
-
-vector<edge*> FileParser::getImplicitEdges(edge* inputEdge)
-{
-    if (inputEdge->src == NULL)
+    auto it = missingEdges.begin();
+    string edgeName = it->first;
+    edge* missingEdge = it->second;
+    if (missingEdge->src == NULL)
     {
-        return {};
+        cout << "Undefined input \"" << edgeName << "\"" << endl;
+    }
+    else if (missingEdge->dest.size() == 0)
+    {
+        cout << "Undefined output \"" << edgeName << "\"" << endl;
     }
     else
     {
-        vertex* vertexSrc = inputEdge->src;
-        vector<edge*> implicitEdges;
-        for (edge*& input : vertexSrc->inputs)
-        {
-            vector<edge*> newEdges = getImplicitEdges(input);
-            implicitEdges.insert(implicitEdges.end(), newEdges.begin(), newEdges.end());
-        }
-        return implicitEdges;
+        cout << "Undefined variable \"" << edgeName << "\"" << endl;
     }
+    return 1;
 }
-
-vector<edge*> FileParser::getUnion(vector<edge*> aEdges, vector<edge*> bEdges)
-{
-    vector<edge*> retEdges;
-    for (edge*& aEdge : aEdges)
-    {
-        for (edge*& bEdge : bEdges)
-        {
-            if (aEdge == bEdge)
-            {
-                retEdges.push_back(aEdge);
-            }
-        }
-    }
-    return retEdges;
-}*/
-
-string FileParser::strtrim(string str)
-{
-    string whitespace = " \t\n\v\f\r";
-    int endIdx = str.find_last_not_of(whitespace);
-    int startIdx = str.find_first_not_of(whitespace);
-    return str.substr(startIdx, endIdx - startIdx + 1);
-};
 
 } // namespace HighLevelSynthesis

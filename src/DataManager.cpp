@@ -1,6 +1,7 @@
 #include "DataManager.h"
 
 #include <iostream>
+#include <map>
 
 using namespace std;
 
@@ -80,40 +81,4 @@ namespace HighLevelSynthesis
         }
         cout << endl;
     }
-    /*void DataManager::VisualizeGraph()
-    {
-        map<edge*, edge*> edgeMap;
-        vector<edge*> edgesCopy;
-        for (edge*& currEdge : edges)
-        {
-            edge* newEdge = new edge(*currEdge);
-            newEdge->dest = {};
-            edgeMap[currEdge] = newEdge;
-            edgesCopy.push_back(newEdge);
-        }
-        vector<vertex*> verticesCopy;
-        for (vertex*& currVertex : vertices)
-        {
-            vertex* newVertex = new vertex(*currVertex);
-            auto start = newVertex->inputs.begin();
-            auto end = newVertex->inputs.end();
-            for (auto it = start; it != end; ++it)
-            {
-                edge* oldEdge = it->second;
-                edge* newEdge = edgeMap[oldEdge];
-                it->second = newEdge;
-                newEdge->dest.push_back(newVertex);
-            }
-            start = newVertex->outputs.begin();
-            end = newVertex->outputs.end();
-            for (auto it = start; it != end; ++it)
-            {
-                edge* oldEdge = it->second;
-                edge* newEdge = edgeMap[oldEdge];
-                it->second = newEdge;
-                newEdge->src = newVertex;
-            }
-            verticesCopy.push_back(newVertex);
-        }
-    }*/
-}
+} // namespace HighLevelSynthesis

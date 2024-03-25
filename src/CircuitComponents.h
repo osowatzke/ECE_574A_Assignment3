@@ -31,6 +31,7 @@ namespace HighLevelSynthesis
         int width;
         bool isSigned;
     };
+    
 } // namespace HighLevelSynthesis
 
 #endif // GUARD_CircuitComponents_h

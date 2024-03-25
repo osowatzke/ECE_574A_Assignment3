@@ -4,6 +4,7 @@
 #include "CircuitComponents.h"
 #include "GraphComponents.h"
 
+#include <map>
 #include <vector>
 
 using namespace std;
@@ -14,9 +15,6 @@ namespace HighLevelSynthesis
     {
         public:
             ~DataManager();
-            // void VisualizeGraph();
-            // vertex* inode;
-            // vertex* onode;
             map<string, net*> nets;
             vector<vertex*> vertices;
             vector<edge*> edges;
@@ -25,6 +23,6 @@ namespace HighLevelSynthesis
             void printVertices();
             void printEdges();
     };
-}
+} // namespace HighLevelSynthesis
 
 #endif // GUARD_DataManager_h

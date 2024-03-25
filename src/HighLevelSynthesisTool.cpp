@@ -15,7 +15,11 @@ namespace HighLevelSynthesis
     int HighLevelSynthesisTool::run(string cFile, int latency, string verilogFile)
     {
         cout << "Generating verilog file \"" << verilogFile << "\" from \"" << cFile << "\" with latency constraint of " << latency << " cycles." << endl;
-        fileParser.run(cFile);
+        int retVal = fileParser.run(cFile);
+        if (retVal)
+        {
+            return retVal;
+        }
         dataManager.printGraph();
         return 0;
     }
