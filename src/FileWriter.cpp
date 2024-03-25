@@ -1,5 +1,6 @@
 #include "FileWriter.h"
 
+#include <cmath>
 #include <iostream>
 
 namespace HighLevelSynthesis
@@ -34,6 +35,29 @@ int FileWriter::openFile(string filePath)
 void FileWriter::closeFile()
 {
     verilogFile.close();
+}
+
+int FileWriter::determineNumUniqueStates()
+{
+    int numUniqueStates = 0;
+    for (vertex*& currVertex : dataManager->vertices)
+    {
+        int vertexEndTime = getVertexEndTime(currVertex);
+        numUniqueStates = max(numUniqueStates, vertexEndTime);
+    }
+    return numUniqueStates;
+}
+
+void FileWriter::declareStates()
+{
+    int numUniqueStates = determineNumUniqueStates();
+    int numStates = numUniqueStates + 2;
+    verilogFile << "    localparam " << "Wait = 0," << endl;
+    for (int i = 0; i < numUniqueStates; ++i)
+    {
+        verilogFile << "               " << "State" << i << " = " << i + 1 << "," << endl;
+    }
+    verilogFile << "               " << "Final = " << numStates - 1 << ";" << endl << endl;
 }
 
 void FileWriter::declareNets()
@@ -91,6 +115,7 @@ void FileWriter::declareNets()
     {
         verilogFile << endl;
     }
+    declareStates();
 }
 
 void FileWriter::declareModule()

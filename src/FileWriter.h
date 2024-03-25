@@ -21,6 +21,8 @@ class FileWriter
         void declareModule();
         void terminateModule();
         void declareNets();
+        int determineNumUniqueStates();
+        void declareStates();
 };
 
 } // namespace HighLevelSynthesis
