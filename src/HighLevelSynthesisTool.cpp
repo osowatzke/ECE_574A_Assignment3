@@ -10,7 +10,8 @@ namespace HighLevelSynthesis
     HighLevelSynthesisTool::HighLevelSynthesisTool()
         : dataManager(DataManager())
         , fileParser(FileParser(&dataManager))
-        , scheduler(AlapScheduler(&dataManager)){}
+        , scheduler(AlapScheduler(&dataManager))
+        , fileWriter(FileWriter(&dataManager)) {}
 
     // Dummy run function. Populate with actual function calls once they are created.
     int HighLevelSynthesisTool::run(string cFile, int latency, string verilogFile)
@@ -21,8 +22,9 @@ namespace HighLevelSynthesis
         {
             return retVal;
         }
+        // dataManager.printGraph();
         scheduler.run();
-        dataManager.printGraph();
+        fileWriter.run(verilogFile);
         return 0;
     }
 } // namespace HighLevelSynthesis

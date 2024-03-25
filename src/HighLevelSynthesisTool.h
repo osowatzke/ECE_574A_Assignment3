@@ -4,6 +4,7 @@
 #include "AlapScheduler.h"
 #include "DataManager.h"
 #include "FileParser.h"
+#include "FileWriter.h"
 
 #include <string>
 
@@ -21,6 +22,7 @@ class HighLevelSynthesisTool
         DataManager dataManager;
         FileParser fileParser;
         AlapScheduler scheduler;
+        FileWriter fileWriter;
 };
 
 } // namespace HighLevelSynthesis
