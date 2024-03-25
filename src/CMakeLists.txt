@@ -1,12 +1,13 @@
 set(SOURCES
     DataManager.cpp
-    HighLevelSynthesisTool.cpp
-    FileParser.cpp)
+    FileParser.cpp
+    HighLevelSynthesisTool.cpp)
 
 set(HEADER_FILES
+    CircuitComponents.h
     DataManager.h
+    FileParser.h
     GraphComponents.h
-    HighLevelSynthesisTool.h
-    FileParser.h)
+    HighLevelSynthesisTool.h)
 
 add_executable(hlsyn ${SOURCES} ${HEADER_FILES})
