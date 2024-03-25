@@ -58,6 +58,13 @@ void FileWriter::declareStates()
         verilogFile << "               " << "State" << i << " = " << i + 1 << "," << endl;
     }
     verilogFile << "               " << "Final = " << numStates - 1 << ";" << endl << endl;
+    int numStateBits = static_cast<int>(ceil(log2(numStates - 1)));
+    verilogFile << "    reg ";
+    if (numStateBits > 1)
+    {
+        verilogFile << "[" << numStateBits - 1 << ":0] ";
+    }
+    verilogFile << "state;" << endl << endl; 
 }
 
 void FileWriter::declareNets()
