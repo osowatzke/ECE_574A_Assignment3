@@ -14,6 +14,7 @@ void FileWriter::run(string filePath)
     openFile(filePath);
     declareModule();
     declareNets();
+    declareFsm();
     terminateModule();
     closeFile();
 }
@@ -35,6 +36,30 @@ int FileWriter::openFile(string filePath)
 void FileWriter::closeFile()
 {
     verilogFile.close();
+}
+
+void FileWriter::declareFsmReset()
+{
+    verilogFile << "        if (Rst = 1) begin" << endl;
+    auto netStart = dataManager->nets.begin();
+    auto netEnd = dataManager->nets.end();
+    for (auto netIt = netStart; netIt != netEnd; ++netIt)
+    {
+        string netName = netIt->first;
+        net* currNet = netIt->second;
+        if ((currNet->type == NetType::OUTPUT) || (currNet->type == NetType::VARIABLE))
+        {
+            verilogFile << "            " << netName << " <= 0;" << endl;
+        }
+    }
+    verilogFile << "        end" << endl;
+}
+
+void FileWriter::declareFsm()
+{
+    verilogFile << "    always @(posedge clk) begin" << endl;
+    declareFsmReset();
+    verilogFile << "    end" << endl;
 }
 
 int FileWriter::determineNumUniqueStates()
@@ -119,6 +144,31 @@ void FileWriter::declareNets()
         }
     }
     if (uniqueOutputs)
+    {
+        verilogFile << endl;
+    }
+
+    bool uniqueReg = false;
+    for (auto netIt = netStart; netIt != netEnd; netIt++)
+    {
+        string netName = netIt->first;
+        net* currNet = netIt->second;
+        if (currNet->type == NetType::VARIABLE)
+        {
+            uniqueReg = true;
+            verilogFile << "    reg ";
+            if (currNet->width > 1)
+            {
+                if (currNet->isSigned)
+                {
+                    verilogFile << "signed ";
+                }
+                verilogFile << "[" << currNet->width - 1 << ":0] ";
+            }
+            verilogFile << netName << ";" << endl;
+        }
+    }
+    if (uniqueReg)
     {
         verilogFile << endl;
     }

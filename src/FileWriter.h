@@ -23,6 +23,8 @@ class FileWriter
         void declareNets();
         int determineNumUniqueStates();
         void declareStates();
+        void declareFsm();
+        void declareFsmReset();
 };
 
 } // namespace HighLevelSynthesis
