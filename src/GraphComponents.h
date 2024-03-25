@@ -19,11 +19,30 @@ namespace HighLevelSynthesis
                                              
     struct vertex
     {
+        int time;
         VertexType type;
         string operation; // Operation that will be implemented in HLSM
         vector <edge*> inputs; 
         vector <edge*> outputs;
     };
+
+    const int DIV_TIME = 3;
+    const int ADD_TIME = 1;
+    const int MUL_TIME = 2;
+    const int LOGIC_TIME = 1;
+
+    inline int getVertexEndTime(vertex* currVertex)
+    {
+        int runTime = 1;
+        switch (currVertex->type)
+        {
+            case VertexType::DIV :
+                runTime = 3;
+            case VertexType::MUL :
+                runTime = 2;
+        }
+        return currVertex->time + runTime - 1;
+    }
     
 } // namespace HighLevelSynthesis
 

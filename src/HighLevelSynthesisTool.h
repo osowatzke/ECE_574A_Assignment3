@@ -1,6 +1,7 @@
 #ifndef GUARD_HighLevelSynthesisTool_h
 #define GUARD_HighLevelSynthesisTool_h
 
+#include "AlapScheduler.h"
 #include "DataManager.h"
 #include "FileParser.h"
 
@@ -19,6 +20,7 @@ class HighLevelSynthesisTool
     private:
         DataManager dataManager;
         FileParser fileParser;
+        AlapScheduler scheduler;
 };
 
 } // namespace HighLevelSynthesis

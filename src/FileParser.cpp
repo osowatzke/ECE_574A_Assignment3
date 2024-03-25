@@ -265,6 +265,7 @@ vertex* FileParser::createVertex(VertexType type, string operation, vector<strin
 vertex* FileParser::createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs)
 {
     vertex* newVertex = new vertex;
+    newVertex->time = -1;
     newVertex->type = type;
     newVertex->operation = operation;
     for (edge*& input : inputs)
