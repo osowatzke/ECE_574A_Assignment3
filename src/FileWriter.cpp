@@ -40,7 +40,7 @@ void FileWriter::closeFile()
 
 void FileWriter::declareFsmReset()
 {
-    verilogFile << "        if (Rst = 1) begin" << endl;
+    verilogFile << "        if (Rst == 1) begin" << endl;
     auto netStart = dataManager->nets.begin();
     auto netEnd = dataManager->nets.end();
     for (auto netIt = netStart; netIt != netEnd; ++netIt)
@@ -52,14 +52,69 @@ void FileWriter::declareFsmReset()
             verilogFile << "            " << netName << " <= 0;" << endl;
         }
     }
+    verilogFile << "            Done <= 0;" << endl;
+    verilogFile << "            State <= Wait;" << endl;
     verilogFile << "        end" << endl;
+}
+
+void FileWriter::declareFsmStates()
+{
+    int numUniqueStates = determineNumUniqueStates();
+    string firstStateName;
+    if (numUniqueStates == 0)
+    {
+        firstStateName = "Final";
+    }
+    else
+    {
+        firstStateName = "State0";
+    }
+    verilogFile << "        else begin" << endl;
+    verilogFile << "            Done <= 0;" << endl;
+    verilogFile << "            case (State)" << endl;
+    verilogFile << "                Wait : begin" << endl;
+    verilogFile << "                    if (Start == 1) begin" << endl;
+    verilogFile << "                        State <= " << firstStateName << ";" << endl;
+    if (numUniqueStates == 0)
+    {
+        verilogFile << "                        Done <= 1;" << endl;
+    }
+    verilogFile << "                    end" << endl;
+    verilogFile << "                end" << endl;
+    for (int time = 0; time < numUniqueStates; ++time)
+    {
+        verilogFile << "                State" << time << " : begin" << endl;
+        for (vertex*& currVertex : dataManager->vertices)
+        {
+            if (currVertex->time == time)
+            {
+                verilogFile << "                    " << currVertex->operation << ";" << endl;
+            }
+        }
+        verilogFile << "                    State <= ";
+        if (time == (numUniqueStates - 1))
+        {
+            verilogFile << "Done;" << endl;
+        }
+        else
+        {
+             verilogFile << "State" << time + 1 << ";" << endl;
+        }
+        verilogFile << "                end" << endl;
+    }
+   verilogFile << "                Final : begin" << endl;
+   verilogFile << "                    State <= Wait;" << endl;
+   verilogFile << "                end" << endl;
+   verilogFile << "            endcase" << endl;
+   verilogFile << "        end" << endl;
 }
 
 void FileWriter::declareFsm()
 {
-    verilogFile << "    always @(posedge clk) begin" << endl;
+    verilogFile << "    always @(posedge Clk) begin" << endl;
     declareFsmReset();
-    verilogFile << "    end" << endl;
+    declareFsmStates();
+    verilogFile << "    end" << endl << endl;
 }
 
 int FileWriter::determineNumUniqueStates()
@@ -68,7 +123,7 @@ int FileWriter::determineNumUniqueStates()
     for (vertex*& currVertex : dataManager->vertices)
     {
         int vertexEndTime = getVertexEndTime(currVertex);
-        numUniqueStates = max(numUniqueStates, vertexEndTime);
+        numUniqueStates = max(numUniqueStates, vertexEndTime + 1);
     }
     return numUniqueStates;
 }
@@ -83,13 +138,13 @@ void FileWriter::declareStates()
         verilogFile << "               " << "State" << i << " = " << i + 1 << "," << endl;
     }
     verilogFile << "               " << "Final = " << numStates - 1 << ";" << endl << endl;
-    int numStateBits = static_cast<int>(ceil(log2(numStates - 1)));
+    int numStateBits = static_cast<int>(ceil(log2(numStates)));
     verilogFile << "    reg ";
     if (numStateBits > 1)
     {
         verilogFile << "[" << numStateBits - 1 << ":0] ";
     }
-    verilogFile << "state;" << endl << endl; 
+    verilogFile << "State;" << endl << endl;
 }
 
 void FileWriter::declareNets()
@@ -177,7 +232,7 @@ void FileWriter::declareNets()
 
 void FileWriter::declareModule()
 {
-    verilogFile << "timescale 1ns/1ns" << endl << endl;
+    verilogFile << "`timescale 1ns/1ns" << endl << endl;
     verilogFile << "module HLSM(Clk, Rst, Start, Done";
     auto netStart = dataManager->nets.begin();
     auto netEnd = dataManager->nets.end();

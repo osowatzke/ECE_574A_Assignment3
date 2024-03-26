@@ -25,6 +25,7 @@ class FileWriter
         void declareStates();
         void declareFsm();
         void declareFsmReset();
+        void declareFsmStates();
 };
 
 } // namespace HighLevelSynthesis

@@ -197,7 +197,7 @@ void FileParser::getVerticesFromLine(string line)
         }
         if (operators.size() == 1)
         {
-            string operation = edgeNames[0] + " = " + edgeNames[1] + " " + operators[0] + " " + edgeNames[2];
+            string operation = edgeNames[0] + " <= " + edgeNames[1] + " " + operators[0] + " " + edgeNames[2];
             VertexType type;
             if ((operators[0] == "+") ||  (operators[0] == "-"))
             {
@@ -219,7 +219,7 @@ void FileParser::getVerticesFromLine(string line)
         }
         else if (operators.size() == 2)
         {
-            string operation = edgeNames[0] + " = " + edgeNames[1] + " " + operators[0] + " " + edgeNames[2];
+            string operation = edgeNames[0] + " <= " + edgeNames[1] + " " + operators[0] + " " + edgeNames[2] + " " + operators[1] + " " + edgeNames[3];
             createVertex(VertexType::LOGIC, operation, {edgeNames[1], edgeNames[2], edgeNames[3]}, {edgeNames[0]});
         }
     }
