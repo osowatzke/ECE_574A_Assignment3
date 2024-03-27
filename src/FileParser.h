@@ -23,6 +23,8 @@ class FileParser
         vector<string> lines;
         map<string, edge*> activeEdges;
         map<string, edge*> missingEdges;
+        hierarchy* currHierarchy;
+        bool hierarchyUpdatePending;
         int readLines(string filePath);
         void removeComments();
         void readNets();
@@ -35,6 +37,7 @@ class FileParser
         vertex* createVertex(VertexType type, string operation, vector<string>inputEdgeNames, vector<string>outputEdgeNames);
         vertex* createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs);
         int checkForUndefinedNets();
+        void parseConditionalStatements(string line);
 };
 
 } // namespace HighLevelSynthesis

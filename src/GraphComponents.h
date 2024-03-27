@@ -1,6 +1,7 @@
 #ifndef GUARD_GraphComponents_h
 #define GUARD_GraphComponents_h
 
+#include <map>
 #include <vector>
 
 using namespace std;
@@ -24,6 +25,23 @@ namespace HighLevelSynthesis
         string operation; // Operation that will be implemented in HLSM
         vector <edge*> inputs; 
         vector <edge*> outputs;
+    };
+
+    struct conditionalHierarchy;
+
+    struct hierarchy
+    {
+        conditionalHierarchy* parent;
+        vector<conditionalHierarchy*> conditional;
+        vector<vertex*> vertices;
+        map<string, edge*> edges;
+    };
+
+    struct conditionalHierarchy
+    {
+        hierarchy* parent;
+        hierarchy* trueHiearchy;
+        hierarchy* falseHiearchy;
     };
 
     const int DIV_TIME = 3;

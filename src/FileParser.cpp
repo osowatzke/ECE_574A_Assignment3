@@ -148,6 +148,7 @@ void FileParser::readNetsFromLine(string line)
 // Function gets the initial graph edges (input nets)
 void FileParser::getInitialGraphEdges()
 {
+    currHierarchy = dataManager->graphHierarchy;
     auto netStart = dataManager->nets.begin();
     auto netEnd = dataManager->nets.end();
     for (auto it = netStart; it != netEnd; ++it)
@@ -164,12 +165,58 @@ void FileParser::getInitialGraphEdges()
 // Function gets graph vertices
 void FileParser::getVertices()
 {
+    hierarchyUpdatePending = false;
     for (string& line: lines)
     {
+        parseConditionalStatements(line);
         getVerticesFromLine(line);
     }
 }
 
+void FileParser::parseConditionalStatements(string line)
+{
+    smatch ifMatch;
+    const regex ifPattern{"^\\s*if\\s*\\(?\\s*(\\w+)\\s*\\)?\\s*\\{\\s*$"};
+    regex_match(line, ifMatch, ifPattern);
+    if (!ifMatch.empty())
+    {
+        /*string inputName = ifMatch.str(0);
+        string operation = "if (" + inputName + " == 1)";
+        edge* input = getEdge(ifMatch.str(1));
+        edge* output = new edge;
+        dataManager->edges.push_back(output);
+        vertex* newVertex = createVertex(VertexType::FORK, operation, {input}, {output});*/
+        conditionalHierarchy* condHierarchy = new conditionalHierarchy;
+        condHierarchy->parent = currHierarchy;
+        condHierarchy->trueHiearchy = new hierarchy;
+        condHierarchy->falseHiearchy = NULL;
+        currHierarchy->conditional.push_back(condHierarchy);
+        currHierarchy = condHierarchy->trueHiearchy;
+        currHierarchy->parent = condHierarchy;
+    }
+    smatch elseMatch;
+    const regex elsePattern{"^\\s*else\\s*\\{\\s*$"};
+    regex_match(line, elseMatch, elsePattern);
+    if (!elseMatch.empty())
+    {
+        hierarchyUpdatePending = false;
+        conditionalHierarchy* condHiearchy = currHierarchy->parent;
+        condHiearchy->falseHiearchy = new hierarchy;
+        currHierarchy = condHiearchy->falseHiearchy;
+        currHierarchy->parent = condHiearchy;
+    }
+    smatch braceMatch;
+    const regex bracePattern{"^\\s*\\}\\s*$"};
+    regex_match(line, braceMatch, bracePattern);
+    if (!braceMatch.empty())
+    {
+        if (hierarchyUpdatePending)
+        {
+            currHierarchy = currHierarchy->parent->parent;
+        }
+        hierarchyUpdatePending = true;
+    }
+}
 // Function gets graph vertices from a line
 void FileParser::getVerticesFromLine(string line)
 {
@@ -178,6 +225,11 @@ void FileParser::getVerticesFromLine(string line)
     regex_match(line, vertexMatch, vertexPattern);
     if (!vertexMatch.empty())
     {
+        if (hierarchyUpdatePending)
+        {
+            currHierarchy = currHierarchy->parent->parent;
+            hierarchyUpdatePending = false;
+        }
         vector <string> edgeNames;
         vector <string> operators;
         edgeNames.push_back(vertexMatch.str(1));
@@ -228,15 +280,33 @@ void FileParser::getVerticesFromLine(string line)
 // Function gets a pointer to an edge and creates one if a pointer does not exist
 edge* FileParser::getEdge(string edgeName)
 {
-    if (activeEdges.find(edgeName) == activeEdges.end())
+    hierarchy* searchHierarchy = currHierarchy;
+    edge* edgeFound = NULL;
+    while (searchHierarchy != NULL)
     {
-        edge* newEdge = createNewEdge(edgeName);
-        if (dataManager->nets.find(edgeName) == dataManager->nets.end())
+        if (searchHierarchy->edges.find(edgeName) != searchHierarchy->edges.end())
         {
-            missingEdges[edgeName] = newEdge;
+            edgeFound = searchHierarchy->edges[edgeName];
+            break;
+        }
+        if (searchHierarchy->parent == NULL)
+        {
+            searchHierarchy = NULL;
+        }
+        else
+        {
+            searchHierarchy = searchHierarchy->parent->parent;
         }
     }
-    return activeEdges[edgeName];
+    if (edgeFound == NULL)
+    {
+        edgeFound = createNewEdge(edgeName);
+        if (dataManager->nets.find(edgeName) == dataManager->nets.end())
+        {
+             missingEdges[edgeName] = edgeFound;
+        }
+    }
+    return edgeFound;
 }
 
 // Function creates a vertex from names of inputs/outputs
@@ -253,7 +323,6 @@ vertex* FileParser::createVertex(VertexType type, string operation, vector<strin
         edge* output = getEdge(outputName);
         if (output->src != NULL)
         {
-            inputs.push_back(output);
             output = createNewEdge(outputName);
         }
         outputs.push_back(output);
@@ -278,6 +347,7 @@ vertex* FileParser::createVertex(VertexType type, string operation, vector<edge*
         newVertex->outputs.push_back(output);
         output->src = newVertex;        
     }
+    currHierarchy->vertices.push_back(newVertex);
     dataManager->vertices.push_back(newVertex);
     return newVertex;
 }
@@ -288,7 +358,7 @@ edge* FileParser::createNewEdge(string edgeName)
     edge* newEdge = new edge;
     newEdge->src = NULL;
     dataManager->edges.push_back(newEdge);
-    activeEdges[edgeName] = newEdge;
+    currHierarchy->edges[edgeName] = newEdge;
     return newEdge;
 }
 

@@ -7,6 +7,12 @@ using namespace std;
 
 namespace HighLevelSynthesis
 {
+    DataManager::DataManager()
+    {
+        graphHierarchy = new hierarchy;
+        graphHierarchy->parent = NULL;
+    }
+
     DataManager::~DataManager()
     {
         // Delete Nets
@@ -28,6 +34,24 @@ namespace HighLevelSynthesis
         {
             delete(currEdge);
         }
+
+        deleteHierarchy(graphHierarchy);
+    }
+
+    void DataManager::deleteHierarchy(hierarchy* hier)
+    {
+        for (conditionalHierarchy*& condHierarchy : hier->conditional)
+        {
+            if (condHierarchy->trueHiearchy != NULL)
+            {
+                deleteHierarchy(condHierarchy->trueHiearchy);
+            }
+            if (condHierarchy->falseHiearchy != NULL)
+            {
+                deleteHierarchy(condHierarchy->falseHiearchy);
+            }
+        }
+        delete(hier);
     }
 
     void DataManager::printGraph()
