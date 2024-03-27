@@ -10,11 +10,11 @@ class AlapScheduler
 {
     public:
         AlapScheduler(DataManager* dataManager);
-        void run();
+        void run(int Latency);
     private:
         DataManager* dataManager;
-        bool predecessorsScheduled(vertex* currVertex);
-        int getEarliestStartTime(vertex* currVertex);
+        bool successorsScheduled(vertex* currVertex);
+        int getLatestStartTime(vertex* currVertex, int Latency);
 };
 
 } // namespace HighLevelSynthesis

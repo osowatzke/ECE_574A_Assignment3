@@ -31,7 +31,7 @@ namespace HighLevelSynthesis
     const int MUL_TIME = 2;
     const int LOGIC_TIME = 1;
 
-    inline int getVertexEndTime(vertex* currVertex)
+    inline int getVertexRunTime(vertex* currVertex)
     {
         int runTime = 1;
         switch (currVertex->type)
@@ -41,6 +41,12 @@ namespace HighLevelSynthesis
             case VertexType::MUL :
                 runTime = 2;
         }
+        return runTime;
+    }
+    
+    inline int getVertexEndTime(vertex* currVertex)
+    {
+        int runTime = getVertexRunTime(currVertex);
         return currVertex->time + runTime - 1;
     }
     

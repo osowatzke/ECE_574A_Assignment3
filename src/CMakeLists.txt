@@ -1,5 +1,6 @@
 set(SOURCES
     AlapScheduler.cpp
+    AsapScheduler.cpp
     DataManager.cpp
     FileParser.cpp
     FileWriter.cpp
@@ -7,6 +8,7 @@ set(SOURCES
 
 set(HEADER_FILES
     AlapScheduler.h
+    AsapScheduler.h
     CircuitComponents.h
     DataManager.h
     FileParser.h
