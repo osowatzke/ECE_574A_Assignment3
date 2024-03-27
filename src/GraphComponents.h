@@ -16,7 +16,7 @@ namespace HighLevelSynthesis
         vector<vertex*> dest;
     };
 
-    enum VertexType{DIV, ADD, MUL, LOGIC};
+    enum VertexType{DIV, ADD, MUL, LOGIC, FORK, JOIN};
                                              
     struct vertex
     {
@@ -39,6 +39,7 @@ namespace HighLevelSynthesis
 
     struct conditionalHierarchy
     {
+        edge* condition;
         hierarchy* parent;
         hierarchy* trueHiearchy;
         hierarchy* falseHiearchy;

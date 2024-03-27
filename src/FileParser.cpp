@@ -165,14 +165,15 @@ void FileParser::parseConditionalStatements(string line)
     regex_match(line, ifMatch, ifPattern);
     if (!ifMatch.empty())
     {
-        /*string inputName = ifMatch.str(0);
+        string inputName = ifMatch.str(0);
         string operation = "if (" + inputName + " == 1)";
         edge* input = getEdge(ifMatch.str(1));
         edge* output = new edge;
         dataManager->edges.push_back(output);
-        vertex* newVertex = createVertex(VertexType::FORK, operation, {input}, {output});*/
+        createVertex(VertexType::FORK, operation, {input}, {output});
         conditionalHierarchy* condHierarchy = new conditionalHierarchy;
         condHierarchy->parent = currHierarchy;
+        condHierarchy->condition = output;
         condHierarchy->trueHiearchy = new hierarchy;
         condHierarchy->falseHiearchy = NULL;
         currHierarchy->conditional.push_back(condHierarchy);
@@ -197,7 +198,56 @@ void FileParser::parseConditionalStatements(string line)
     {
         if (hierarchyUpdatePending)
         {
+            conditionalHierarchy* condHierarchy = currHierarchy->parent;
+            auto start = condHierarchy->trueHiearchy->edges.begin();
+            auto end = condHierarchy->trueHiearchy->edges.end();
+            vector<string> edgeNames;
+            for (auto it = start; it != end; ++it)
+            {
+                string edgeName = it->first;
+                edgeNames.push_back(edgeName);
+            }
+            start = condHierarchy->falseHiearchy->edges.begin();
+            end = condHierarchy->falseHiearchy->edges.end();
+            vector<string> initialEdgeNames = edgeNames;
+            for (auto it = start; it != end; ++it)
+            {
+                string edgeName = it->first;
+                bool nameMatch = false;
+                for (string& initialEdgeName : initialEdgeNames)
+                {
+                    if (edgeName == initialEdgeName)
+                    {
+                        nameMatch = true;
+                    }
+                }
+                if (!nameMatch)
+                {
+                    edgeNames.push_back(edgeName);
+                }
+            }
+            hierarchy* trueHierarchy = condHierarchy->trueHiearchy;
+            hierarchy* falseHierarchy = condHierarchy->trueHiearchy;
+            vector<edge*> inputs;
+            for (string edgeName : edgeNames)
+            {
+                currHierarchy = trueHierarchy;
+                inputs.push_back(getEdge(edgeName));
+                currHierarchy = falseHierarchy;
+                inputs.push_back(getEdge(edgeName));
+            }
             currHierarchy = currHierarchy->parent->parent;
+            vector<edge*> outputs;
+            for (string edgeName : edgeNames)
+            {
+                edge* outputEdge = getEdge(edgeName);
+                if (outputEdge->src != NULL)
+                {
+                    outputEdge = createNewEdge(edgeName);
+                }
+                outputs.push_back(outputEdge);
+            }
+            createVertex(VertexType::FORK, "", inputs, outputs);
         }
         hierarchyUpdatePending = true;
     }
@@ -327,6 +377,11 @@ vertex* FileParser::createVertex(VertexType type, string operation, vector<edge*
         newVertex->inputs.push_back(input);
         input->dest.push_back(newVertex);        
     }
+    if (currHierarchy->parent != NULL)
+    {
+        newVertex->inputs.push_back(currHierarchy->parent->condition);
+        currHierarchy->parent->condition->dest.push_back(newVertex);
+    }
     for (edge*& output : outputs)
     {
         newVertex->outputs.push_back(output);
@@ -366,6 +421,7 @@ net* FileParser::createNewNet(string netName, NetType type, int width, bool isSi
 
     // Update nets in data manager
     dataManager->nets[netName] = newNet;
+    return newNet;
 }
 
 int FileParser::checkForUndefinedNets()
