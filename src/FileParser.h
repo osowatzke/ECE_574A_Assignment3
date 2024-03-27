@@ -38,6 +38,7 @@ class FileParser
         vertex* createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs);
         int checkForUndefinedNets();
         void parseConditionalStatements(string line);
+        net* createNewNet(string netName, NetType type, int width, bool isSigned);
 };
 
 } // namespace HighLevelSynthesis

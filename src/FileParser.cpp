@@ -124,23 +124,8 @@ void FileParser::readNetsFromLine(string line)
         for (sregex_iterator i = start; i != end; ++i)
         {
             smatch netsMatch = *i;
-            net* newNet = new net;
-            newNet->type = type;
-            newNet->width = width;
-
-            // Force single bit wires to be unsigned
-            if (newNet->width > 1)
-            {
-                newNet->isSigned = isSigned;
-            }
-            else
-            {
-                newNet->isSigned = false;
-            }
-
-            // Update nets in data manager
             string netName = netsMatch.str(1);
-            dataManager->nets[netName] = newNet;
+            createNewNet(netName, type, width, isSigned);
         }
     }
 }
@@ -360,6 +345,27 @@ edge* FileParser::createNewEdge(string edgeName)
     dataManager->edges.push_back(newEdge);
     currHierarchy->edges[edgeName] = newEdge;
     return newEdge;
+}
+
+// Function creates a new net
+net* FileParser::createNewNet(string netName, NetType type, int width, bool isSigned)
+{
+    net* newNet = new net;
+    newNet->type = type;
+    newNet->width = width;
+
+    // Force single bit wires to be unsigned
+    if (newNet->width > 1)
+    {
+        newNet->isSigned = isSigned;
+    }
+    else
+    {
+        newNet->isSigned = false;
+    }
+
+    // Update nets in data manager
+    dataManager->nets[netName] = newNet;
 }
 
 int FileParser::checkForUndefinedNets()
