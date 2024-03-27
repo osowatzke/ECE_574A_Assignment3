@@ -26,6 +26,8 @@ class FileWriter
         void declareFsm();
         void declareFsmReset();
         void declareFsmStates();
+        string tab();
+        string tab(int numTabs);
 };
 
 } // namespace HighLevelSynthesis

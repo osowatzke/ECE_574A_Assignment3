@@ -40,7 +40,7 @@ void FileWriter::closeFile()
 
 void FileWriter::declareFsmReset()
 {
-    verilogFile << "        if (Rst == 1) begin" << endl;
+    verilogFile << tab(2) << "if (Rst == 1) begin" << endl;
     auto netStart = dataManager->nets.begin();
     auto netEnd = dataManager->nets.end();
     for (auto netIt = netStart; netIt != netEnd; ++netIt)
@@ -49,12 +49,27 @@ void FileWriter::declareFsmReset()
         net* currNet = netIt->second;
         if ((currNet->type == NetType::OUTPUT) || (currNet->type == NetType::VARIABLE))
         {
-            verilogFile << "            " << netName << " <= 0;" << endl;
+            verilogFile << tab(3) << netName << " <= 0;" << endl;
         }
     }
-    verilogFile << "            Done <= 0;" << endl;
-    verilogFile << "            State <= Wait;" << endl;
-    verilogFile << "        end" << endl;
+    verilogFile << tab(3) << "Done <= 0;" << endl;
+    verilogFile << tab(3) << "State <= Wait;" << endl;
+    verilogFile << tab(2) << "end" << endl;
+}
+
+string FileWriter::tab()
+{
+    return "    ";
+}
+
+string FileWriter::tab(int numTabs)
+{
+    string retVal;
+    for (int i = 0; i < numTabs; ++i)
+    {
+        retVal += tab();
+    }
+    return retVal;
 }
 
 void FileWriter::declareFsmStates()
@@ -69,29 +84,29 @@ void FileWriter::declareFsmStates()
     {
         firstStateName = "State0";
     }
-    verilogFile << "        else begin" << endl;
-    verilogFile << "            Done <= 0;" << endl;
-    verilogFile << "            case (State)" << endl;
-    verilogFile << "                Wait : begin" << endl;
-    verilogFile << "                    if (Start == 1) begin" << endl;
-    verilogFile << "                        State <= " << firstStateName << ";" << endl;
+    verilogFile << tab(2) << "else begin" << endl;
+    verilogFile << tab(3) << "Done <= 0;" << endl;
+    verilogFile << tab(3) << "case (State)" << endl;
+    verilogFile << tab(4) << "Wait : begin" << endl;
+    verilogFile << tab(5) << "if (Start == 1) begin" << endl;
+    verilogFile << tab(6) << "State <= " << firstStateName << ";" << endl;
     if (numUniqueStates == 0)
     {
-        verilogFile << "                        Done <= 1;" << endl;
+        verilogFile << tab(6) << "Done <= 1;" << endl;
     }
-    verilogFile << "                    end" << endl;
-    verilogFile << "                end" << endl;
+    verilogFile << tab(5) << "end" << endl;
+    verilogFile << tab(4) << "end" << endl;
     for (int time = 0; time < numUniqueStates; ++time)
     {
-        verilogFile << "                State" << time << " : begin" << endl;
+        verilogFile << tab(4) << "State" << time << " : begin" << endl;
         for (vertex*& currVertex : dataManager->vertices)
         {
             if (currVertex->time == time)
             {
-                verilogFile << "                    " << currVertex->operation << ";" << endl;
+                verilogFile << tab(5) << currVertex->operation << ";" << endl;
             }
         }
-        verilogFile << "                    State <= ";
+        verilogFile << tab(5) << "State <= ";
         if (time == (numUniqueStates - 1))
         {
             verilogFile << "Done;" << endl;
@@ -102,19 +117,19 @@ void FileWriter::declareFsmStates()
         }
         verilogFile << "                end" << endl;
     }
-   verilogFile << "                Final : begin" << endl;
-   verilogFile << "                    State <= Wait;" << endl;
-   verilogFile << "                end" << endl;
-   verilogFile << "            endcase" << endl;
-   verilogFile << "        end" << endl;
+   verilogFile << tab(4) << "Final : begin" << endl;
+   verilogFile << tab(5) << "State <= Wait;" << endl;
+   verilogFile << tab(4) << "end" << endl;
+   verilogFile << tab(3) << "endcase" << endl;
+   verilogFile << tab(2) << "end" << endl;
 }
 
 void FileWriter::declareFsm()
 {
-    verilogFile << "    always @(posedge Clk) begin" << endl;
+    verilogFile << tab(1) << "always @(posedge Clk) begin" << endl;
     declareFsmReset();
     declareFsmStates();
-    verilogFile << "    end" << endl << endl;
+    verilogFile << tab(1) << "end" << endl << endl;
 }
 
 int FileWriter::determineNumUniqueStates()
@@ -132,14 +147,14 @@ void FileWriter::declareStates()
 {
     int numUniqueStates = determineNumUniqueStates();
     int numStates = numUniqueStates + 2;
-    verilogFile << "    localparam " << "Wait = 0," << endl;
+    verilogFile << tab() << "localparam " << "Wait = 0," << endl;
     for (int i = 0; i < numUniqueStates; ++i)
     {
-        verilogFile << "               " << "State" << i << " = " << i + 1 << "," << endl;
+        verilogFile << tab(3) << "   " << "State" << i << " = " << i + 1 << "," << endl;
     }
-    verilogFile << "               " << "Final = " << numStates - 1 << ";" << endl << endl;
+    verilogFile << tab(3) << "   " << "Final = " << numStates - 1 << ";" << endl << endl;
     int numStateBits = static_cast<int>(ceil(log2(numStates)));
-    verilogFile << "    reg ";
+    verilogFile << tab() << "reg ";
     if (numStateBits > 1)
     {
         verilogFile << "[" << numStateBits - 1 << ":0] ";
@@ -149,8 +164,8 @@ void FileWriter::declareStates()
 
 void FileWriter::declareNets()
 {
-    verilogFile << "    input Clk, Rst, Start;" << endl;
-    verilogFile << "    output reg Done;" << endl << endl;
+    verilogFile << tab() << "input Clk, Rst, Start;" << endl;
+    verilogFile << tab() << "output reg Done;" << endl << endl;
     bool uniqueInputs = false;
     auto netStart = dataManager->nets.begin();
     auto netEnd = dataManager->nets.end();
@@ -161,7 +176,7 @@ void FileWriter::declareNets()
         if (currNet->type == NetType::INPUT)
         {
             uniqueInputs = true;
-            verilogFile << "    input ";
+            verilogFile << tab() << "input ";
             if (currNet->width > 1)
             {
                 if (currNet->isSigned)
@@ -186,7 +201,7 @@ void FileWriter::declareNets()
         if (currNet->type == NetType::OUTPUT)
         {
             uniqueOutputs = true;
-            verilogFile << "    output reg ";
+            verilogFile << tab() << "output reg ";
             if (currNet->width > 1)
             {
                 if (currNet->isSigned)
@@ -211,7 +226,7 @@ void FileWriter::declareNets()
         if (currNet->type == NetType::VARIABLE)
         {
             uniqueReg = true;
-            verilogFile << "    reg ";
+            verilogFile << tab() << "reg ";
             if (currNet->width > 1)
             {
                 if (currNet->isSigned)
