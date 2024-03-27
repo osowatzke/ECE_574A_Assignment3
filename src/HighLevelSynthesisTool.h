@@ -2,11 +2,14 @@
 #define GUARD_HighLevelSynthesisTool_h
 
 #include "AlapScheduler.h"
+#include "AsapScheduler.h"
 #include "DataManager.h"
 #include "FileParser.h"
 #include "FileWriter.h"
 
 #include <string>
+
+#define USE_ALAP_SCHEDULER
 
 using namespace std;
 
@@ -21,7 +24,12 @@ class HighLevelSynthesisTool
     private:
         DataManager dataManager;
         FileParser fileParser;
-        AlapScheduler scheduler;
+        #ifdef USE_ALAP_SCHEDULER
+            AlapScheduler scheduler;
+        #endif
+        #ifndef USE_ALAP_SCHEDULER
+            AsapScheduler scheduler;
+        #endif
         FileWriter fileWriter;
 };
 

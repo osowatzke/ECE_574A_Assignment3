@@ -10,7 +10,12 @@ namespace HighLevelSynthesis
     HighLevelSynthesisTool::HighLevelSynthesisTool()
         : dataManager(DataManager())
         , fileParser(FileParser(&dataManager))
+        #ifdef USE_ALAP_SCHEDULER
         , scheduler(AlapScheduler(&dataManager))
+        #endif
+        #ifndef USE_ALAP_SCHEDULER
+        , scheduler(AsapScheduler(&dataManager))
+        #endif
         , fileWriter(FileWriter(&dataManager)) {}
 
     // Dummy run function. Populate with actual function calls once they are created.
@@ -23,7 +28,12 @@ namespace HighLevelSynthesis
             return retVal;
         }
         // dataManager.printGraph();
-        scheduler.run();
+        #ifdef USE_ALAP_SCHEDULER
+            scheduler.run(latency - 1);
+        #endif
+        #ifndef USE_ALAP_SCHEDULER
+            scheduler.run();
+        #endif
         fileWriter.run(verilogFile);
         return 0;
     }

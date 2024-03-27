@@ -1,12 +1,14 @@
 #include "AlapScheduler.h"
 
+#include <limits>
+
 namespace HighLevelSynthesis
 {
 
 AlapScheduler::AlapScheduler(DataManager* dataManager)
     : dataManager(dataManager) {}
 
-void AlapScheduler::run()
+void AlapScheduler::run(int latency)
 {
     bool unscheduledVertices = true;
     while (unscheduledVertices)
@@ -14,26 +16,29 @@ void AlapScheduler::run()
         unscheduledVertices = false;
         for (vertex*& currVertex : dataManager->vertices)
         {
-            if ((currVertex->time == -1) && (predecessorsScheduled(currVertex)))
+            if (currVertex->time == -1)
             {
-                currVertex->time = getEarliestStartTime(currVertex);
-            }
-            else
-            {
-                unscheduledVertices = true;
+                if (successorsScheduled(currVertex))
+                {
+                    currVertex->time = getLatestStartTime(currVertex, latency);
+                }
+                else
+                {
+                    unscheduledVertices = true;
+                }
+
             }
         }
     }
 }
 
-bool AlapScheduler::predecessorsScheduled(vertex* currVertex)
+bool AlapScheduler::successorsScheduled(vertex* currVertex)
 {
-    for (edge* input : currVertex->inputs)
+    for (edge* output : currVertex->outputs)
     {
-        if (input->src != NULL)
+        for(vertex*& dest : output->dest)
         {
-            vertex* src = input->src;
-            if (src->time == -1)
+            if (dest->time == -1)
             {
                 return false;
             }
@@ -42,16 +47,15 @@ bool AlapScheduler::predecessorsScheduled(vertex* currVertex)
     return true;
 }
 
-int AlapScheduler::getEarliestStartTime(vertex* currVertex)
+int AlapScheduler::getLatestStartTime(vertex* currVertex, int latency)
 {
-    int startTime = 0;
-    for (edge* input : currVertex->inputs)
+    int runTime = getVertexRunTime(currVertex);
+    int startTime = latency - runTime;
+    for (edge* output : currVertex->outputs)
     {
-        if (input->src != NULL)
+        for(vertex*& dest : output->dest)
         {
-            vertex* src = input->src;
-            int vertexEndTime = getVertexEndTime(src);
-            startTime = max(startTime, vertexEndTime + 1);
+            startTime = min(startTime, dest->time - runTime);
         }
     }
     return startTime;
