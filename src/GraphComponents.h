@@ -55,13 +55,19 @@ namespace HighLevelSynthesis
 
     inline int getVertexRunTime(vertex* currVertex)
     {
-        int runTime = 1;
+        int runTime = 0;
         switch (currVertex->type)
         {
-            case VertexType::DIV :
+            case VertexType::DIV:
                 runTime = 3;
-            case VertexType::MUL :
+            case VertexType::ADD:
+                runTime = 1;
+            case VertexType::MUL:
                 runTime = 2;
+            case VertexType::LOGIC:
+                runTime = 1;
+            case VertexType::FORK:
+                runTime = 1;
         }
         return runTime;
     }

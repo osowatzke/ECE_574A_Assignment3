@@ -29,16 +29,21 @@ class FileParser
         void removeComments();
         void readNets();
         void readNetsFromLine(string line);
-        void getInitialGraphEdges();
-        edge* getEdge(string edgeName);
-        edge* createNewEdge(string edgeName);
+        net* createNewNet(string netName, NetType type, int width, bool isSigned);
         void getVertices();
-        void getVerticesFromLine(string line);
+        void parseConditionalStatements(string line);
+        edge* getEdge(string edgeName);
+        edge* createNewEdge();
+        edge* createNewEdge(string edgeName);
         vertex* createVertex(VertexType type, string operation, vector<string>inputEdgeNames, vector<string>outputEdgeNames);
         vertex* createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs);
+        conditionalHierarchy* createNewConditionalHierarchy(edge* condition);
+        hierarchy* createTrueHierarchy();
+        hierarchy* createFalseHierarchy();
+        void returnFromHierarchy();
+        vertex* createJoinVertex();
+        void getVerticesFromLine(string line);
         int checkForUndefinedNets();
-        void parseConditionalStatements(string line);
-        net* createNewNet(string netName, NetType type, int width, bool isSigned);
 };
 
 } // namespace HighLevelSynthesis
