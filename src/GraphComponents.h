@@ -17,10 +17,13 @@ namespace HighLevelSynthesis
     };
 
     enum VertexType{DIV, ADD, MUL, LOGIC, FORK, JOIN};
-                                             
+
+    struct hierarchy;
+
     struct vertex
     {
         int time;
+        hierarchy* parent;
         VertexType type;
         string operation; // Operation that will be implemented in HLSM
         vector <edge*> inputs; 

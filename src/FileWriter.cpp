@@ -132,6 +132,39 @@ void FileWriter::declareFsm()
     verilogFile << tab(1) << "end" << endl << endl;
 }
 
+void FileWriter::addVerticesToStates()
+{
+    for (vertex*& currVertex : dataManager->vertices)
+    {
+        int vertexEndTime = getVertexEndTime(currVertex);
+        int numStatesToAdd = vertexEndTime - states.size() + 1;
+        for (int i = 0; i < numStatesToAdd; ++i)
+        {
+            State newState;
+            vector<State> stateVector;
+            stateVector.push_back(newState);
+            states.push_back(stateVector);
+        }
+        int time = currVertex->time;
+        bool stateMatch = false;
+        for (State currState : states[time])
+        {
+            if ((currState.vertices.empty()) || (currVertex->parent == currState.vertices[0]->parent))
+            {
+                stateMatch = true;
+                currState.vertices.push_back(currVertex);
+                break;
+            }
+        }
+        if (!stateMatch)
+        {
+            State newState;
+            newState.vertices.push_back(currVertex);
+            states[time].push_back(newState);
+        }
+    }
+}
+
 int FileWriter::determineNumUniqueStates()
 {
     int numUniqueStates = 0;

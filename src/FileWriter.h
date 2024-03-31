@@ -8,6 +8,11 @@
 namespace HighLevelSynthesis
 {
 
+struct State
+{
+    vector<vertex*> vertices;
+};
+
 class FileWriter
 {
     public:
@@ -16,6 +21,7 @@ class FileWriter
     private:
         DataManager* dataManager;
         ofstream verilogFile;
+        vector<vector<State>> states; 
         int openFile(string filePath);
         void closeFile();
         void declareModule();
@@ -28,6 +34,7 @@ class FileWriter
         void declareFsmStates();
         string tab();
         string tab(int numTabs);
+        void addVerticesToStates();
 };
 
 } // namespace HighLevelSynthesis

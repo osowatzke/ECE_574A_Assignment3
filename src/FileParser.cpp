@@ -165,9 +165,9 @@ void FileParser::parseConditionalStatements(string line)
     regex_match(line, ifMatch, ifPattern);
     if (!ifMatch.empty())
     {
-        string inputName = ifMatch.str(0);
+        string inputName = ifMatch.str(1);
         string operation = "if (" + inputName + " == 1)";
-        edge* input = getEdge(ifMatch.str(1));
+        edge* input = getEdge(inputName);
         edge* output = new edge;
         dataManager->edges.push_back(output);
         createVertex(VertexType::FORK, operation, {input}, {output});
@@ -243,6 +243,7 @@ void FileParser::parseConditionalStatements(string line)
                 edge* outputEdge = getEdge(edgeName);
                 if (outputEdge->src != NULL)
                 {
+                    inputs.push_back(getEdge(edgeName));
                     outputEdge = createNewEdge(edgeName);
                 }
                 outputs.push_back(outputEdge);
@@ -387,6 +388,7 @@ vertex* FileParser::createVertex(VertexType type, string operation, vector<edge*
         newVertex->outputs.push_back(output);
         output->src = newVertex;        
     }
+    newVertex->parent = currHierarchy;
     currHierarchy->vertices.push_back(newVertex);
     dataManager->vertices.push_back(newVertex);
     return newVertex;
