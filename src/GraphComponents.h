@@ -19,10 +19,12 @@ namespace HighLevelSynthesis
     enum VertexType{DIV, ADD, MUL, LOGIC, FORK, JOIN};
 
     struct hierarchy;
+    struct state;
 
     struct vertex
     {
         int time;
+        state* currState;
         hierarchy* parent;
         VertexType type;
         string operation; // Operation that will be implemented in HLSM
@@ -46,6 +48,26 @@ namespace HighLevelSynthesis
         hierarchy* parent;
         hierarchy* trueHiearchy;
         hierarchy* falseHiearchy;
+    };
+
+    
+    struct conditionalState;
+
+    struct state
+    {
+        vector<vertex*> vertices;
+        state* prevState;
+        state* nextState;
+        conditionalState* nextCondState;
+    };
+
+    struct conditionalState
+    {
+        string condition;
+        state* trueState;
+        state* falseState;
+        conditionalState* trueCondState;
+        conditionalState* falseCondState;
     };
 
     const int DIV_TIME = 3;

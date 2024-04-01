@@ -169,6 +169,7 @@ net* FileParser::createNewNet(string netName, NetType type, int width, bool isSi
 // Function gets graph vertices
 void FileParser::getVertices()
 {
+    currHierarchy = dataManager->graphHierarchy;
     hierarchyUpdatePending = false;
     for (string& line: lines)
     {
@@ -248,23 +249,26 @@ vertex* FileParser::createJoinVertex()
         string edgeName = it->first;
         edgeNames.push_back(edgeName);
     }
-    start = condHierarchy->falseHiearchy->edges.begin();
-    end = condHierarchy->falseHiearchy->edges.end();
-    vector<string> initialEdgeNames = edgeNames;
-    for (auto it = start; it != end; ++it)
+    if (condHierarchy->falseHiearchy != NULL)
     {
-        string edgeName = it->first;
-        bool nameMatch = false;
-        for (string& initialEdgeName : initialEdgeNames)
+        start = condHierarchy->falseHiearchy->edges.begin();
+        end = condHierarchy->falseHiearchy->edges.end();
+        vector<string> initialEdgeNames = edgeNames;
+        for (auto it = start; it != end; ++it)
         {
-            if (edgeName == initialEdgeName)
+            string edgeName = it->first;
+            bool nameMatch = false;
+            for (string& initialEdgeName : initialEdgeNames)
             {
-                nameMatch = true;
+                if (edgeName == initialEdgeName)
+                {
+                    nameMatch = true;
+                }
             }
-        }
-        if (!nameMatch)
-        {
-            edgeNames.push_back(edgeName);
+            if (!nameMatch)
+            {
+                edgeNames.push_back(edgeName);
+            }
         }
     }
     hierarchy* trueHierarchy = condHierarchy->trueHiearchy;
@@ -274,10 +278,17 @@ vertex* FileParser::createJoinVertex()
     {
         currHierarchy = trueHierarchy;
         inputs.push_back(getEdge(edgeName));
-        currHierarchy = falseHierarchy;
+        if (falseHierarchy == NULL)
+        {
+            currHierarchy = currHierarchy->parent->parent;
+        }
+        else
+        {
+            currHierarchy = falseHierarchy;
+        }
         inputs.push_back(getEdge(edgeName));
     }
-    currHierarchy = currHierarchy->parent->parent;
+    currHierarchy = trueHierarchy->parent->parent;
     vector<edge*> outputs;
     for (string edgeName : edgeNames)
     {
@@ -289,7 +300,7 @@ vertex* FileParser::createJoinVertex()
         }
         outputs.push_back(outputEdge);
     }
-    return createVertex(VertexType::FORK, "", inputs, outputs);
+    return createVertex(VertexType::JOIN, "", inputs, outputs);
 }
 
 void FileParser::returnFromHierarchy()
@@ -309,11 +320,7 @@ void FileParser::getVerticesFromLine(string line)
     regex_match(line, vertexMatch, vertexPattern);
     if (!vertexMatch.empty())
     {
-        if (hierarchyUpdatePending)
-        {
-            currHierarchy = currHierarchy->parent->parent;
-            hierarchyUpdatePending = false;
-        }
+        returnFromHierarchy();
         vector <string> edgeNames;
         vector <string> operators;
         edgeNames.push_back(vertexMatch.str(1));

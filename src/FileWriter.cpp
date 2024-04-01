@@ -9,14 +9,294 @@ namespace HighLevelSynthesis
 FileWriter::FileWriter(DataManager* dataManager)
     : dataManager(dataManager) {}
 
+FileWriter::~FileWriter()
+{
+    for (vector<state*> stateVector : states)
+    {
+        for (state* currState : stateVector)
+        {
+            delete(currState);
+        }
+    }
+}
+
 void FileWriter::run(string filePath)
 {
+    createStates();
+    cout << "DONE" << endl;
+    printStates();
     openFile(filePath);
     declareModule();
     declareNets();
     declareFsm();
     terminateModule();
     closeFile();
+}
+
+void FileWriter::getNumStatesPerTimestep()
+{
+    int numTimesteps = getNumTimesteps();
+    numStatesPerTimestep = vector<int> (numTimesteps, 0);
+    
+};
+
+void FileWriter::getStates()
+{
+    int numTimesteps = getNumTimesteps();
+    int maxTime = numTimesteps - 1;
+    for (int time = 0; time < maxTime; ++time)
+    {
+        
+    }
+}
+
+void FileWriter::createStates()
+{
+    determineHierarchyMapping();
+    int numTimesteps = getNumTimesteps();
+    vector<state*> initialStateVector;
+    vector<vector<state*>> newStates(numTimesteps, initialStateVector);
+    states = newStates;
+    for (int time = 0; time < numTimesteps; ++time)
+    {
+        for (hierarchy* currHierarchy : hierarchyMapping[time])
+        {
+            state* newState = new state;
+            hierarchy* searchHieararchy = currHierarchy;
+            for (vertex* currVertex : searchHieararchy->vertices)
+            {
+                if (currVertex->time == time)
+                {    
+                    newState->vertices.push_back(currVertex);
+                    currVertex->currState = newState;
+                }
+            }
+            while (searchHieararchy->parent != NULL)
+            {
+                searchHieararchy = searchHieararchy->parent->parent;
+                for (vertex* currVertex : searchHieararchy->vertices)
+                {
+                    if (currVertex->time == time)
+                    {    
+                        newState->vertices.push_back(currVertex);
+                        currVertex->currState = newState;
+                    }
+                }
+            }
+            states[time].push_back(newState);
+            bool addFalseState = currHierarchy->parent != NULL;
+            for (hierarchy* compHierarchy : hierarchyMapping[time])
+            {
+                if ((currHierarchy != compHierarchy) && (currHierarchy->parent != NULL))
+                {
+                    if (currHierarchy->parent == compHierarchy->parent)
+                    {
+                        addFalseState = false;
+                    }
+                }
+            }
+            if (addFalseState)
+            {
+                state* newState = new state;
+                hierarchy* searchHieararchy = currHierarchy;
+                while (searchHieararchy->parent != NULL)
+                {
+                    searchHieararchy = searchHieararchy->parent->parent;
+                    for (vertex* currVertex : searchHieararchy->vertices)
+                    {
+                        if (currVertex->time == time)
+                        {    
+                            newState->vertices.push_back(currVertex);
+                            currVertex->currState = newState;
+                        }
+                    }
+                }
+                states[time].push_back(newState);
+            }
+        }
+    }
+}
+
+void FileWriter::printStates()
+{
+    int numTimestamps = states.size();
+    for (int time = 0; time < numTimestamps; ++time)
+    {
+        cout << "Time " << time << ":" << endl;
+        int stateIdx = 0;
+        for (state* currState : states[time])
+        {
+            cout << "\tState" << time;
+            if (states[time].size() > 1)
+            {
+                cout << "_" << stateIdx << endl;
+            }
+            cout << endl;
+            for (vertex* currVertex : currState->vertices)
+            {
+                if (currVertex->type != VertexType::FORK && currVertex->type != VertexType::JOIN)
+                {
+                    cout << "\t\t" << currVertex->operation << endl;
+                }
+            }
+            stateIdx++;
+        }
+    }
+}
+
+void FileWriter::determineHierarchyMapping()
+{
+    int numTimesteps = getNumTimesteps();
+    vector<hierarchy*> initialVector(1, dataManager->graphHierarchy);
+    vector<vector<hierarchy*>> newHierarchyMapping(numTimesteps, initialVector);
+    hierarchyMapping = newHierarchyMapping;
+    determineHierarchyMapping(dataManager->graphHierarchy);
+    for (int time = 0; time < numTimesteps; ++time)
+    {
+        vector<hierarchy*> newHierarchyVector;
+        for (hierarchy* currHierarchy : hierarchyMapping[time])
+        {
+            bool isParent = false;
+            for (hierarchy* compHierarchy : hierarchyMapping[time])
+            {
+                if (!isParent && compHierarchy != currHierarchy)
+                {
+                    isParent = isParentHierarchy(compHierarchy, currHierarchy);
+                }
+            }
+            if (!isParent)
+            {
+                newHierarchyVector.push_back(currHierarchy);
+            }
+        }
+        cout << time << " : " << hierarchyMapping[time].size() << endl;
+        hierarchyMapping[time] = newHierarchyVector;
+        // cout << time << " : " << newHierarchyVector.size() << endl;
+    }
+}
+
+void FileWriter::determineHierarchyMapping(hierarchy* hierarchy)
+{
+    for (conditionalHierarchy* condHier : hierarchy->conditional)
+    {
+        int startTime = getConditionalStartTime(condHier);
+        int endTime = getConditionalEndTime(condHier);
+        if (condHier->trueHiearchy != NULL)
+        {
+            for (int time = startTime; time <= endTime; ++time)
+            {
+                hierarchyMapping[time].push_back(condHier->trueHiearchy);
+            }
+            determineHierarchyMapping(condHier->trueHiearchy);
+        }
+        if (condHier->falseHiearchy != NULL)
+        {
+            for (int time = startTime; time <= endTime; ++time)
+            {
+                hierarchyMapping[time].push_back(condHier->falseHiearchy);
+            }
+            determineHierarchyMapping(condHier->falseHiearchy);
+        }
+    }
+}
+
+bool FileWriter::isParentHierarchy(hierarchy* currHierarchy, hierarchy* compHiearchy)
+{
+    bool isParent = currHierarchy == compHiearchy;
+    while (currHierarchy->parent != NULL)
+    {
+        currHierarchy = currHierarchy->parent->parent;
+        if (!isParent)
+        {
+            isParent = currHierarchy == compHiearchy;
+        }
+    }
+    return isParent;
+}
+
+int FileWriter::getConditionalStartTime(conditionalHierarchy* condHier)
+{
+    int startTime = -1;
+    if (condHier->trueHiearchy != NULL)
+    {
+        for (vertex* currVertex : condHier->trueHiearchy->vertices)
+        {
+            int vertexStartTime = currVertex->time;
+            if (startTime < 0)
+            {
+                startTime = vertexStartTime;
+            }
+            else
+            {
+                startTime = min(startTime, vertexStartTime);
+            }
+        }
+    }
+    if (condHier->falseHiearchy != NULL)
+    {
+        for (vertex* currVertex : condHier->falseHiearchy->vertices)
+        {
+            int vertexStartTime = currVertex->time;
+            if (startTime < 0)
+            {
+                startTime = vertexStartTime;
+            }
+            else
+            {
+                startTime = min(startTime, vertexStartTime);
+            }
+        }
+    }
+    return startTime;
+};
+
+int FileWriter::getConditionalEndTime(conditionalHierarchy* condHier)
+{
+    int endTime = 0;
+    if (condHier->trueHiearchy != NULL)
+    {
+        for (vertex* currVertex : condHier->trueHiearchy->vertices)
+        {
+            int vertexEndTime = getVertexEndTime(currVertex);
+            endTime = max(endTime, vertexEndTime);
+        }
+    }
+    if (condHier->falseHiearchy != NULL)
+    {
+        for (vertex* currVertex : condHier->falseHiearchy->vertices)
+        {
+            int vertexEndTime = getVertexEndTime(currVertex);
+            endTime = max(endTime, vertexEndTime);
+        }
+    }
+    return endTime;
+};
+
+void FileWriter::getNumStatesPerTimestep(hierarchy* hier)
+{
+    vector<bool> vertexInTimestep(numStatesPerTimestep.size(), false);
+    for (vertex*& currVertex : hier->vertices)
+    {
+        int time = currVertex->time;
+        if (!vertexInTimestep[time])
+        {
+            ++numStatesPerTimestep[time]; 
+        }
+    }
+    for (conditionalHierarchy*& conditional : hier->conditional)
+    {
+        if (conditional != NULL)
+        {
+            if (conditional->trueHiearchy != NULL)
+            {
+                getNumStatesPerTimestep(conditional->trueHiearchy);
+            }
+            if (conditional->falseHiearchy != NULL)
+            {
+                getNumStatesPerTimestep(conditional->falseHiearchy);
+            }
+        }
+    }
 }
 
 int FileWriter::openFile(string filePath)
@@ -74,7 +354,7 @@ string FileWriter::tab(int numTabs)
 
 void FileWriter::declareFsmStates()
 {
-    int numUniqueStates = determineNumUniqueStates();
+    int numUniqueStates = getNumTimesteps();
     string firstStateName;
     if (numUniqueStates == 0)
     {
@@ -132,7 +412,7 @@ void FileWriter::declareFsm()
     verilogFile << tab(1) << "end" << endl << endl;
 }
 
-void FileWriter::addVerticesToStates()
+/*void FileWriter::addVerticesToStates()
 {
     for (vertex*& currVertex : dataManager->vertices)
     {
@@ -140,8 +420,8 @@ void FileWriter::addVerticesToStates()
         int numStatesToAdd = vertexEndTime - states.size() + 1;
         for (int i = 0; i < numStatesToAdd; ++i)
         {
-            State newState;
-            vector<State> stateVector;
+            state newState;
+            vector<state> stateVector;
             stateVector.push_back(newState);
             states.push_back(stateVector);
         }
@@ -163,22 +443,22 @@ void FileWriter::addVerticesToStates()
             states[time].push_back(newState);
         }
     }
-}
+}*/
 
-int FileWriter::determineNumUniqueStates()
+int FileWriter::getNumTimesteps()
 {
-    int numUniqueStates = 0;
+    int numTimesteps = 0;
     for (vertex*& currVertex : dataManager->vertices)
     {
         int vertexEndTime = getVertexEndTime(currVertex);
-        numUniqueStates = max(numUniqueStates, vertexEndTime + 1);
+        numTimesteps = max(numTimesteps, vertexEndTime + 1);
     }
-    return numUniqueStates;
+    return numTimesteps;
 }
 
 void FileWriter::declareStates()
 {
-    int numUniqueStates = determineNumUniqueStates();
+    int numUniqueStates = getNumTimesteps();
     int numStates = numUniqueStates + 2;
     verilogFile << tab() << "localparam " << "Wait = 0," << endl;
     for (int i = 0; i < numUniqueStates; ++i)
