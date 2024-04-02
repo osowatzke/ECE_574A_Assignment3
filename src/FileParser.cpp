@@ -190,8 +190,8 @@ void FileParser::parseConditionalStatements(string line)
         edge* input = getEdge(inputName);
         edge* output = createNewEdge();
         createVertex(VertexType::FORK, operation, {input}, {output});
-        createNewConditionalHierarchy(output);
-        currHierarchy = createTrueHierarchy();
+        conditionalHierarchy* condHierarchy = createNewConditionalHierarchy(output);
+        currHierarchy = condHierarchy->trueHiearchy;
     }
     smatch elseMatch;
     const regex elsePattern{"^\\s*else\\s*\\{\\s*$"};
@@ -199,7 +199,7 @@ void FileParser::parseConditionalStatements(string line)
     if (!elseMatch.empty())
     {
         hierarchyUpdatePending = false;
-        currHierarchy = createFalseHierarchy();
+        currHierarchy = currHierarchy->parent->falseHiearchy;
     }
     smatch braceMatch;
     const regex bracePattern{"^\\s*\\}\\s*$"};
@@ -216,26 +216,12 @@ conditionalHierarchy* FileParser::createNewConditionalHierarchy(edge* condition)
     conditionalHierarchy* condHierarchy = new conditionalHierarchy;
     condHierarchy->parent = currHierarchy;
     condHierarchy->condition = condition;
-    condHierarchy->trueHiearchy = NULL;
-    condHierarchy->falseHiearchy = NULL;
+    condHierarchy->trueHiearchy = new hierarchy;
+    condHierarchy->trueHiearchy->parent = condHierarchy;
+    condHierarchy->falseHiearchy = new hierarchy;
+    condHierarchy->falseHiearchy->parent = condHierarchy;
     currHierarchy->conditional.push_back(condHierarchy);
     return condHierarchy;
-}
-
-hierarchy* FileParser::createTrueHierarchy()
-{
-    conditionalHierarchy* condHierarhcy = currHierarchy->conditional.back();
-    condHierarhcy->trueHiearchy = new hierarchy;
-    condHierarhcy->trueHiearchy->parent = condHierarhcy;
-    return condHierarhcy->trueHiearchy;
-}
-
-hierarchy* FileParser::createFalseHierarchy()
-{
-    conditionalHierarchy* condHierarhcy = currHierarchy->parent;
-    condHierarhcy->falseHiearchy = new hierarchy;
-    condHierarhcy->falseHiearchy->parent = condHierarhcy;
-    return condHierarhcy->falseHiearchy;
 }
 
 vertex* FileParser::createJoinVertex()
@@ -249,26 +235,23 @@ vertex* FileParser::createJoinVertex()
         string edgeName = it->first;
         edgeNames.push_back(edgeName);
     }
-    if (condHierarchy->falseHiearchy != NULL)
+    start = condHierarchy->falseHiearchy->edges.begin();
+    end = condHierarchy->falseHiearchy->edges.end();
+    vector<string> initialEdgeNames = edgeNames;
+    for (auto it = start; it != end; ++it)
     {
-        start = condHierarchy->falseHiearchy->edges.begin();
-        end = condHierarchy->falseHiearchy->edges.end();
-        vector<string> initialEdgeNames = edgeNames;
-        for (auto it = start; it != end; ++it)
+        string edgeName = it->first;
+        bool nameMatch = false;
+        for (string& initialEdgeName : initialEdgeNames)
         {
-            string edgeName = it->first;
-            bool nameMatch = false;
-            for (string& initialEdgeName : initialEdgeNames)
+            if (edgeName == initialEdgeName)
             {
-                if (edgeName == initialEdgeName)
-                {
-                    nameMatch = true;
-                }
+                nameMatch = true;
             }
-            if (!nameMatch)
-            {
-                edgeNames.push_back(edgeName);
-            }
+        }
+        if (!nameMatch)
+        {
+            edgeNames.push_back(edgeName);
         }
     }
     hierarchy* trueHierarchy = condHierarchy->trueHiearchy;
@@ -278,14 +261,7 @@ vertex* FileParser::createJoinVertex()
     {
         currHierarchy = trueHierarchy;
         inputs.push_back(getEdge(edgeName));
-        if (falseHierarchy == NULL)
-        {
-            currHierarchy = currHierarchy->parent->parent;
-        }
-        else
-        {
-            currHierarchy = falseHierarchy;
-        }
+        currHierarchy = falseHierarchy;
         inputs.push_back(getEdge(edgeName));
     }
     currHierarchy = trueHierarchy->parent->parent;

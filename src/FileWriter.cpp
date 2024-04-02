@@ -84,7 +84,7 @@ void FileWriter::createStates()
                 }
             }
             states[time].push_back(newState);
-            bool addFalseState = currHierarchy->parent != NULL;
+            /*bool addFalseState = currHierarchy->parent != NULL;
             for (hierarchy* compHierarchy : hierarchyMapping[time])
             {
                 if ((currHierarchy != compHierarchy) && (currHierarchy->parent != NULL))
@@ -112,7 +112,7 @@ void FileWriter::createStates()
                     }
                 }
                 states[time].push_back(newState);
-            }
+            }*/
         }
     }
 }
@@ -134,7 +134,7 @@ void FileWriter::printStates()
             cout << endl;
             for (vertex* currVertex : currState->vertices)
             {
-                if (currVertex->type != VertexType::FORK && currVertex->type != VertexType::JOIN)
+                if (currVertex->type != VertexType::JOIN) // currVertex->type != VertexType::FORK &&
                 {
                     cout << "\t\t" << currVertex->operation << endl;
                 }
@@ -217,34 +217,28 @@ bool FileWriter::isParentHierarchy(hierarchy* currHierarchy, hierarchy* compHiea
 int FileWriter::getConditionalStartTime(conditionalHierarchy* condHier)
 {
     int startTime = -1;
-    if (condHier->trueHiearchy != NULL)
+    for (vertex* currVertex : condHier->trueHiearchy->vertices)
     {
-        for (vertex* currVertex : condHier->trueHiearchy->vertices)
+        int vertexStartTime = currVertex->time;
+        if (startTime < 0)
         {
-            int vertexStartTime = currVertex->time;
-            if (startTime < 0)
-            {
-                startTime = vertexStartTime;
-            }
-            else
-            {
-                startTime = min(startTime, vertexStartTime);
-            }
+            startTime = vertexStartTime;
+        }
+        else
+        {
+            startTime = min(startTime, vertexStartTime);
         }
     }
-    if (condHier->falseHiearchy != NULL)
+    for (vertex* currVertex : condHier->falseHiearchy->vertices)
     {
-        for (vertex* currVertex : condHier->falseHiearchy->vertices)
+        int vertexStartTime = currVertex->time;
+        if (startTime < 0)
         {
-            int vertexStartTime = currVertex->time;
-            if (startTime < 0)
-            {
-                startTime = vertexStartTime;
-            }
-            else
-            {
-                startTime = min(startTime, vertexStartTime);
-            }
+            startTime = vertexStartTime;
+        }
+        else
+        {
+            startTime = min(startTime, vertexStartTime);
         }
     }
     return startTime;
@@ -253,21 +247,15 @@ int FileWriter::getConditionalStartTime(conditionalHierarchy* condHier)
 int FileWriter::getConditionalEndTime(conditionalHierarchy* condHier)
 {
     int endTime = 0;
-    if (condHier->trueHiearchy != NULL)
+    for (vertex* currVertex : condHier->trueHiearchy->vertices)
     {
-        for (vertex* currVertex : condHier->trueHiearchy->vertices)
-        {
-            int vertexEndTime = getVertexEndTime(currVertex);
-            endTime = max(endTime, vertexEndTime);
-        }
+        int vertexEndTime = getVertexEndTime(currVertex);
+        endTime = max(endTime, vertexEndTime);
     }
-    if (condHier->falseHiearchy != NULL)
+    for (vertex* currVertex : condHier->falseHiearchy->vertices)
     {
-        for (vertex* currVertex : condHier->falseHiearchy->vertices)
-        {
-            int vertexEndTime = getVertexEndTime(currVertex);
-            endTime = max(endTime, vertexEndTime);
-        }
+        int vertexEndTime = getVertexEndTime(currVertex);
+        endTime = max(endTime, vertexEndTime);
     }
     return endTime;
 };
@@ -287,14 +275,8 @@ void FileWriter::getNumStatesPerTimestep(hierarchy* hier)
     {
         if (conditional != NULL)
         {
-            if (conditional->trueHiearchy != NULL)
-            {
-                getNumStatesPerTimestep(conditional->trueHiearchy);
-            }
-            if (conditional->falseHiearchy != NULL)
-            {
-                getNumStatesPerTimestep(conditional->falseHiearchy);
-            }
+            getNumStatesPerTimestep(conditional->trueHiearchy);
+            getNumStatesPerTimestep(conditional->falseHiearchy);
         }
     }
 }
