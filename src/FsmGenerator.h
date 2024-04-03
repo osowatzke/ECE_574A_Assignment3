@@ -2,6 +2,7 @@
 #define GUARD_FsmGenerator_h
 
 #include "DataManager.h"
+#include "GraphComponents.h"
 
 #include <map>
 

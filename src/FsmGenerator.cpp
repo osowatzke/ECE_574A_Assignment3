@@ -1,4 +1,5 @@
 #include "FsmGenerator.h"
+#include "GraphComponents.h"
 
 #include <iostream>
 #include <string.h>
@@ -15,6 +16,10 @@ FsmGenerator::~FsmGenerator()
 {
     for (state*& currState : states)
     {
+        for (stateTransition* transition : currState->transitions)
+        {
+            delete(transition);
+        }
         delete(currState);
     }
 }
@@ -83,10 +88,15 @@ void FsmGenerator::getNextStates(state* currState, int time)
     for (int i = 0; i < numStates; ++i)
     {
         vector<hierarchy*> newHier = hierUpdate;
+        vector<string> condition(condHierUpdate.size());
+        vector<bool> isTrue(condHierUpdate.size());
         for (int j = 0; j < condHierUpdate.size(); ++j)
         {
-            int useTrueHier = (i & (1 << j)) >> j;
-            if (useTrueHier)
+            edge* condEdge = condHierUpdate[j]->condition;
+            vertex* condVertex = condEdge->src;
+            condition[j] = condVertex->operation;
+            isTrue[j] = (i & (1 << j)) != 0;
+            if (isTrue[j])
             {
                 newHier.push_back(condHierUpdate[j]->trueHiearchy);
             }
@@ -98,6 +108,11 @@ void FsmGenerator::getNextStates(state* currState, int time)
         if ((time + 1) < getEndTime())
         {
             state* nextState = getState(newHier, time+1);
+            stateTransition* transition = new stateTransition;
+            transition->condition = condition;
+            transition->isTrue = isTrue;
+            transition->nextState = nextState;
+            currState->transitions.push_back(transition);
             getNextStates(nextState, time+1);
         }
     }
@@ -144,7 +159,10 @@ state* FsmGenerator::getState(vector<hierarchy*> hier, int time)
         {
             if (currVertex->time == time)
             {
-                newState->vertices.push_back(currVertex);
+                if (currVertex->type != VertexType::FORK && currVertex->type != VertexType::JOIN)
+                {
+                    newState->vertices.push_back(currVertex);
+                }
             }
         }
     }

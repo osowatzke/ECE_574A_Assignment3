@@ -23,6 +23,7 @@
         "limits": "cpp",
         "random": "cpp",
         "iosfwd": "cpp",
-        "xlocale": "cpp"
+        "xlocale": "cpp",
+        "bitset": "cpp"
     }
 }

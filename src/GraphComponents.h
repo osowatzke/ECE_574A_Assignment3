@@ -52,6 +52,7 @@ namespace HighLevelSynthesis
 
     
     struct conditionalState;
+    struct stateTransition;
 
     struct state
     {
@@ -59,6 +60,7 @@ namespace HighLevelSynthesis
         string name;
         vector<vertex*> vertices;
         vector<hierarchy*> hier;
+        vector<stateTransition*> transitions;
         // stateTree* nextState;
         // stateTree*
         /*state* prevState;
@@ -80,6 +82,13 @@ namespace HighLevelSynthesis
         state* nextState;
         stateTree* trueState;
         stateTree* falseState;
+    };
+
+    struct stateTransition
+    {
+        vector<string> condition;
+        vector<bool> isTrue;
+        state* nextState;
     };
 
     const int DIV_TIME = 3;
