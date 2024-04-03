@@ -89,21 +89,20 @@ namespace HighLevelSynthesis
 
     inline int getVertexRunTime(vertex* currVertex)
     {
-        int runTime = 0;
         switch (currVertex->type)
         {
             case VertexType::DIV:
-                runTime = DIV_TIME;
+                return DIV_TIME;
             case VertexType::ADD:
-                runTime = ADD_TIME;
+                return ADD_TIME;
             case VertexType::MUL:
-                runTime = MUL_TIME;
+                return MUL_TIME;
             case VertexType::LOGIC:
-                runTime = LOGIC_TIME;
+                return LOGIC_TIME;
             case VertexType::FORK:
-                runTime = 1;
+                return 1;
         }
-        return runTime;
+        return 0;
     }
     
     inline int getVertexEndTime(vertex* currVertex)
