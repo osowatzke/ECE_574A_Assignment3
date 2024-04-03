@@ -36,7 +36,8 @@ class FsmGenerator
         vector<conditionalHierarchy*> getNewConditionals(state* currState, int time);
         void createStates();
         void sortStates();
-        void printStateTransition();
+        void printStateTransition(state* currState, vector<bool> condition, int depth);
+        state* findNextState(state* currState, vector<bool> condition);
 };
 
 } // namepsace HighLevelSynthesis

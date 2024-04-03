@@ -40,11 +40,12 @@ void FsmGenerator::printStates()
         cout << currState->name << ":" << endl;
         for (vertex* currVertex : currState->vertices)
         {
-            cout << "\t" << currVertex->operation << ";" << endl;
+            cout << "    " << currVertex->operation << ";" << endl;
         }
         if (!currState->transitions.empty())
         {
-            vector<string> conditions = currState->transitions[0]->condition;
+            printStateTransition(currState, {}, 0);
+            /*vector<string> conditions = currState->transitions[0]->condition;
             if (conditions.empty())
             {
                 cout << "\t" << "state <= " << currState->transitions[0]->nextState->name << ";" << endl;
@@ -57,7 +58,7 @@ void FsmGenerator::printStates()
                     {
                         cout << "\t";
                     }
-                    cout << "if " << conditions[i] << " begin" << endl;
+                    cout << "if " << conditions[i] << " begin" << endl;*/
                     /*for (int j = 1; j >= 0; --j)
                     {
                         cout << 
@@ -67,14 +68,75 @@ void FsmGenerator::printStates()
                         cout << "\t";
                     }
                     cout << "end" << endl;*/
-                }
-            }
+                //}
+            //}
         }
     }
 }
 
-void FsmGenerator::printStateTransition()
+void FsmGenerator::printStateTransition(state* currState, vector<bool> condition, int depth)
 {
+    vector<stateTransition*> transitions = currState->transitions;
+    for (size_t i = 0; i < (depth+1); ++i)
+    {
+        cout << "    ";
+    }
+    if (transitions.size() == (1 << depth))
+    {
+        state* nextState = findNextState(currState, condition);
+        cout << "state <= " << nextState->name << endl;
+    }
+    else
+    {
+        cout << "LOOK HERE: " << currState->transitions.size() << endl;
+        for (int j = 0; j < currState->transitions.size(); ++j)
+        {
+            cout << currState->transitions[j]->nextState->name << endl;
+        }
+        cout << "if (" << currState->transitions[0]->condition[depth] << ") begin" << endl;
+        vector<bool> nextCondition = condition;
+        nextCondition.push_back(true);
+        printStateTransition(currState, nextCondition, depth + 1);
+        for (size_t i = 0; i < (depth+1); ++i)
+        {
+            cout << "    ";
+        }
+        cout << "end" << endl;
+        for (size_t i = 0; i < (depth+1); ++i)
+        {
+            cout << "    ";
+        }
+        cout << "else begin" << endl;
+        nextCondition = {};
+        nextCondition = condition;
+        nextCondition.push_back(false);
+        printStateTransition(currState, nextCondition, depth + 1);
+        for (size_t i = 0; i < (depth+1); ++i)
+        {
+            cout << "    ";
+        }
+        cout << "end" << endl;
+    }
+}
+
+state* FsmGenerator::findNextState(state* currState, vector<bool> condition)
+{
+    for (stateTransition* transition : currState->transitions)
+    {
+        bool match = true;
+        for (size_t i = 0; i < condition.size(); ++i)
+        {
+            if (transition->isTrue[i] != condition[i])
+            {
+                match = false;
+            }
+        }
+        if (match)
+        {
+            return transition->nextState;
+        }
+    }
+    return NULL;
 }
 
 void FsmGenerator::sortStates()
