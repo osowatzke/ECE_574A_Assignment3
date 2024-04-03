@@ -40,12 +40,41 @@ void FsmGenerator::printStates()
         cout << currState->name << ":" << endl;
         for (vertex* currVertex : currState->vertices)
         {
-            if (currVertex->type != VertexType::JOIN)
+            cout << "\t" << currVertex->operation << ";" << endl;
+        }
+        if (!currState->transitions.empty())
+        {
+            vector<string> conditions = currState->transitions[0]->condition;
+            if (conditions.empty())
             {
-                cout << "\t" << currVertex->operation << endl;
+                cout << "\t" << "state <= " << currState->transitions[0]->nextState->name << ";" << endl;
+            }
+            else
+            {
+                for (int i = 0; i < conditions.size() ; ++i)
+                {
+                    for (int j = 0; j < i; ++j)
+                    {
+                        cout << "\t";
+                    }
+                    cout << "if " << conditions[i] << " begin" << endl;
+                    /*for (int j = 1; j >= 0; --j)
+                    {
+                        cout << 
+                    }
+                    for (int j = 0; j < i; ++j)
+                    {
+                        cout << "\t";
+                    }
+                    cout << "end" << endl;*/
+                }
             }
         }
     }
+}
+
+void FsmGenerator::printStateTransition()
+{
 }
 
 void FsmGenerator::sortStates()
