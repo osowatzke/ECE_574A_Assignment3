@@ -55,10 +55,15 @@ namespace HighLevelSynthesis
 
     struct state
     {
+        int time;
+        string name;
         vector<vertex*> vertices;
-        state* prevState;
+        vector<hierarchy*> hier;
+        // stateTree* nextState;
+        // stateTree*
+        /*state* prevState;
         state* nextState;
-        conditionalState* nextCondState;
+        conditionalState* nextCondState;*/
     };
 
     struct conditionalState
@@ -68,6 +73,13 @@ namespace HighLevelSynthesis
         state* falseState;
         conditionalState* trueCondState;
         conditionalState* falseCondState;
+    };
+
+    struct stateTree
+    {
+        state* nextState;
+        stateTree* trueState;
+        stateTree* falseState;
     };
 
     const int DIV_TIME = 3;
@@ -81,13 +93,13 @@ namespace HighLevelSynthesis
         switch (currVertex->type)
         {
             case VertexType::DIV:
-                runTime = 3;
+                runTime = DIV_TIME;
             case VertexType::ADD:
-                runTime = 1;
+                runTime = ADD_TIME;
             case VertexType::MUL:
-                runTime = 2;
+                runTime = MUL_TIME;
             case VertexType::LOGIC:
-                runTime = 1;
+                runTime = LOGIC_TIME;
             case VertexType::FORK:
                 runTime = 1;
         }

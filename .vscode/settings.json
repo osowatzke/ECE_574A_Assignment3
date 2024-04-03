@@ -22,6 +22,7 @@
         "*.tcc": "cpp",
         "limits": "cpp",
         "random": "cpp",
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "xlocale": "cpp"
     }
 }

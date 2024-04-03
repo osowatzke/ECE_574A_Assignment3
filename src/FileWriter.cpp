@@ -22,9 +22,9 @@ FileWriter::~FileWriter()
 
 void FileWriter::run(string filePath)
 {
-    createStates();
-    cout << "DONE" << endl;
-    printStates();
+    //createStates();
+    //cout << "DONE" << endl;
+    //printStates();
     openFile(filePath);
     declareModule();
     declareNets();

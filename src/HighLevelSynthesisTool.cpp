@@ -16,6 +16,7 @@ namespace HighLevelSynthesis
         #ifndef USE_ALAP_SCHEDULER
         , scheduler(AsapScheduler(&dataManager))
         #endif
+        , fsmGen(FsmGenerator(&dataManager))
         , fileWriter(FileWriter(&dataManager)) {}
 
     // Dummy run function. Populate with actual function calls once they are created.
@@ -34,6 +35,7 @@ namespace HighLevelSynthesis
         #ifndef USE_ALAP_SCHEDULER
             scheduler.run();
         #endif
+        fsmGen.run();
         fileWriter.run(verilogFile);
         return 0;
     }
