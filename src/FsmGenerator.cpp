@@ -88,11 +88,11 @@ void FsmGenerator::printStateTransition(state* currState, vector<bool> condition
     }
     else
     {
-        cout << "LOOK HERE: " << currState->transitions.size() << endl;
-        for (int j = 0; j < currState->transitions.size(); ++j)
+        // cout << "LOOK HERE: " << currState->transitions.size() << endl;
+        /*for (int j = 0; j < currState->transitions.size(); ++j)
         {
             cout << currState->transitions[j]->nextState->name << endl;
-        }
+        }*/
         cout << "if (" << currState->transitions[0]->condition[depth] << ") begin" << endl;
         vector<bool> nextCondition = condition;
         nextCondition.push_back(true);
@@ -157,7 +157,7 @@ void FsmGenerator::sortStates()
 
 void FsmGenerator::createStates()
 {
-    state* initialState = getState({dataManager->graphHierarchy}, 0);
+    state* initialState = createState({dataManager->graphHierarchy}, 0);
     getNextStates(initialState, 0);
 }
 
@@ -173,9 +173,10 @@ void FsmGenerator::getNextStates(state* currState, int time)
             hierUpdate.push_back(hier);
         }
     }
-    cout << " " << hierUpdate.size() << endl;
+    cout << " " << hierUpdate.size();
     vector <conditionalHierarchy*> condHierUpdate = getNewConditionals(currState, time);
     int numStates = (1 << condHierUpdate.size());
+    cout << " " << condHierUpdate.size() << endl;
     for (int i = 0; i < numStates; ++i)
     {
         vector<hierarchy*> newHier = hierUpdate;
@@ -198,25 +199,27 @@ void FsmGenerator::getNextStates(state* currState, int time)
         }
         if ((time + 1) < getEndTime())
         {
-            state* nextState = getState(newHier, time+1);
+            state* nextState = findState(newHier, time+1);
+            if (nextState == NULL)
+            {
+                nextState = createState(newHier, time+1);
+                getNextStates(nextState, time+1);
+            }
             stateTransition* transition = new stateTransition;
             transition->condition = condition;
             transition->isTrue = isTrue;
             transition->nextState = nextState;
             currState->transitions.push_back(transition);
-            getNextStates(nextState, time+1);
         }
     }
 }
 
-state* FsmGenerator::getState(vector<hierarchy*> hier, int time)
+state* FsmGenerator::findState(vector<hierarchy*> hier, int time)
 {
-    int numStatesAtTime = 0;
     for (state* currState : states)
     {
         if (currState->time == time)
         {
-            numStatesAtTime++;
             bool hierMatch = true;
             for (hierarchy* currHier : hier)
             {
@@ -237,6 +240,19 @@ state* FsmGenerator::getState(vector<hierarchy*> hier, int time)
             {
                 return currState;
             }
+        }
+    }
+    return NULL;
+}
+
+state* FsmGenerator::createState(vector<hierarchy*> hier, int time)
+{
+    int numStatesAtTime = 0;
+    for (state* currState : states)
+    {
+        if (currState->time == time)
+        {
+            numStatesAtTime++;
         }
     }
     state* newState = new state;
