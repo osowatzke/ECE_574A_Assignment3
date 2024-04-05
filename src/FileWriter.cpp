@@ -66,10 +66,6 @@ void FileWriter::printStates()
 void FileWriter::printStateTransition(state* currState, vector<bool> condition, int depth)
 {
     vector<stateTransition*> transitions = currState->transitions;
-    /*for (size_t i = 0; i < (depth+1); ++i)
-    {
-        cout << "    ";
-    }*/
     int indent = depth + 5;
     if (transitions.size() == (1 << depth))
     {
