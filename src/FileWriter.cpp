@@ -119,6 +119,99 @@ void FileWriter::createStates()
 
 void FileWriter::printStates()
 {
+    string firstStateName = "Final";
+    if (!dataManager->states.empty())
+    {
+        firstStateName = dataManager->states[0]->name;
+    }
+    verilogFile << tab(2) << "else begin" << endl;
+    verilogFile << tab(3) << "Done <= 0;" << endl;
+    verilogFile << tab(3) << "case (State)" << endl;
+    verilogFile << tab(4) << "Wait : begin" << endl;
+    verilogFile << tab(5) << "if (Start == 1) begin" << endl;
+    verilogFile << tab(6) << "State <= " << firstStateName << ";" << endl;
+    if (dataManager->states.empty())
+    {
+        verilogFile << tab(6) << "Done <= 1;" << endl;
+    }
+    verilogFile << tab(5) << "end" << endl;
+    verilogFile << tab(4) << "end" << endl;
+    for (state* currState : dataManager->states)
+    {
+        verilogFile << tab(4) << currState->name << " : begin" << endl;
+        for (vertex* currVertex : currState->vertices)
+        {
+            verilogFile << tab(5) << currVertex->operation << ";" << endl;
+        }
+        if (currState->transitions.empty())
+        {
+            verilogFile << tab(5) << "State <= Final;" << endl;
+            verilogFile << tab(5) << "Done <= 1;" << endl;
+        }
+        else
+        {
+            printStateTransition(currState, {}, 0);
+        }
+        verilogFile << tab(4) << "end" << endl;
+    }
+    verilogFile << tab(4) << "Final : begin" << endl;
+    verilogFile << tab(5) << "State <= Wait;" << endl;
+    verilogFile << tab(4) << "end" << endl;
+    verilogFile << tab(3) << "endcase" << endl;
+    verilogFile << tab(2) << "end" << endl;
+}
+
+void FileWriter::printStateTransition(state* currState, vector<bool> condition, int depth)
+{
+    vector<stateTransition*> transitions = currState->transitions;
+    /*for (size_t i = 0; i < (depth+1); ++i)
+    {
+        cout << "    ";
+    }*/
+    int indent = depth + 5;
+    if (transitions.size() == (1 << depth))
+    {
+        state* nextState = getNextState(currState, condition);
+        verilogFile << tab(indent) << "state <= " << nextState->name << endl;
+    }
+    else
+    {
+        verilogFile << tab(indent) << currState->transitions[0]->condition[depth] << " begin" << endl;
+        vector<bool> nextCondition = condition;
+        nextCondition.push_back(true);
+        printStateTransition(currState, nextCondition, depth + 1);
+        verilogFile << tab(indent) << "end" << endl;
+        verilogFile << tab(indent) << "else begin" << endl;
+        nextCondition = {};
+        nextCondition = condition;
+        nextCondition.push_back(false);
+        printStateTransition(currState, nextCondition, depth + 1);
+        verilogFile << tab(indent) << "end" << endl;
+    }
+}
+
+state* FileWriter::getNextState(state* currState, vector<bool> condition)
+{
+    for (stateTransition* transition : currState->transitions)
+    {
+        bool match = true;
+        for (size_t i = 0; i < condition.size(); ++i)
+        {
+            if (transition->isTrue[i] != condition[i])
+            {
+                match = false;
+            }
+        }
+        if (match)
+        {
+            return transition->nextState;
+        }
+    }
+    return NULL;
+}
+
+/*void FileWriter::printStates()
+{
     int numTimestamps = states.size();
     for (int time = 0; time < numTimestamps; ++time)
     {
@@ -142,7 +235,7 @@ void FileWriter::printStates()
             stateIdx++;
         }
     }
-}
+}*/
 
 void FileWriter::determineHierarchyMapping()
 {
@@ -344,7 +437,7 @@ void FileWriter::declareFsmStates()
     }
     else
     {
-        firstStateName = "State0";
+        firstStateName = "State0_0";
     }
     verilogFile << tab(2) << "else begin" << endl;
     verilogFile << tab(3) << "Done <= 0;" << endl;
@@ -390,7 +483,7 @@ void FileWriter::declareFsm()
 {
     verilogFile << tab(1) << "always @(posedge Clk) begin" << endl;
     declareFsmReset();
-    declareFsmStates();
+    printStates();
     verilogFile << tab(1) << "end" << endl << endl;
 }
 
@@ -443,12 +536,18 @@ void FileWriter::declareStates()
     int numUniqueStates = getNumTimesteps();
     int numStates = numUniqueStates + 2;
     verilogFile << tab() << "localparam " << "Wait = 0," << endl;
-    for (int i = 0; i < numUniqueStates; ++i)
+    int stateIdx = 1;
+    for (state* currState : dataManager->states)
+    {
+        verilogFile << tab(3) << "   " << currState->name << " = " << stateIdx << "," << endl;
+        stateIdx++;
+    }
+    /*for (int i = 0; i < numUniqueStates; ++i)
     {
         verilogFile << tab(3) << "   " << "State" << i << " = " << i + 1 << "," << endl;
-    }
-    verilogFile << tab(3) << "   " << "Final = " << numStates - 1 << ";" << endl << endl;
-    int numStateBits = static_cast<int>(ceil(log2(numStates)));
+    }*/
+    verilogFile << tab(3) << "   " << "Final = " << stateIdx << ";" << endl << endl;
+    int numStateBits = static_cast<int>(ceil(log2(stateIdx + 1)));
     verilogFile << tab() << "reg ";
     if (numStateBits > 1)
     {

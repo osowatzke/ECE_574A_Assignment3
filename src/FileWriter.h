@@ -44,6 +44,8 @@ class FileWriter
         bool isParentHierarchy(hierarchy* currHierarchy, hierarchy* compHiearchy);
         void createStates();
         void printStates();
+        void printStateTransition(state* currState, vector<bool> condition, int depth);
+        state* getNextState(state* currState, vector<bool> condition);
 };
 
 } // namespace HighLevelSynthesis
