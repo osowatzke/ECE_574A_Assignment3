@@ -33,7 +33,8 @@ int FileParser::run(string filePath)
     // Get graph vertices
     getVertices();
 
-    retVal = checkForUndefinedNets();
+    // Determine if any edges were not defined by a net
+    retVal = checkForUndefinedEdges();
 
     return retVal;
 }
@@ -149,28 +150,16 @@ net* FileParser::createNewNet(string netName, NetType type, int width, bool isSi
     return newNet;
 }
 
-// Function gets the initial graph edges (input nets)
-/*void FileParser::getInitialGraphEdges()
-{
-    currHierarchy = dataManager->graphHierarchy;
-    auto netStart = dataManager->nets.begin();
-    auto netEnd = dataManager->nets.end();
-    for (auto it = netStart; it != netEnd; ++it)
-    {
-        string netName = it->first;
-        net* currNet = it->second;
-        if (currNet->type == NetType::INPUT)
-        {
-            createNewEdge(netName);
-        }
-    }
-}*/
-
 // Function gets graph vertices
 void FileParser::getVertices()
 {
+    // Set initial hierarchy
     currHierarchy = dataManager->graphHierarchy;
+
+    // No pending hierarchy updates (end of if statements)
     hierarchyUpdatePending = false;
+
+    // Parse conditional logic and vertices from each line
     for (string& line: lines)
     {
         parseConditionalStatements(line);
@@ -178,39 +167,66 @@ void FileParser::getVertices()
     }
 }
 
+// Function parses conditional statements
 void FileParser::parseConditionalStatements(string line)
 {
+    // Use regular expression to match start of if statement
     smatch ifMatch;
     const regex ifPattern{"^\\s*if\\s*\\(?\\s*(\\w+)\\s*\\)?\\s*\\{\\s*$"};
     regex_match(line, ifMatch, ifPattern);
+
+    // If line contains start of if statement
     if (!ifMatch.empty())
     {
+        // Return from previous conditional hierarchy if applicable
+        returnFromHierarchy();
+
+        // Create a fork vertex
         string inputName = ifMatch.str(1);
         string operation = "if (" + inputName + " == 1)";
         edge* input = getEdge(inputName);
         edge* output = createNewEdge();
         createVertex(VertexType::FORK, operation, {input}, {output});
+
+        // Create a new conditional hierarchy and select the true branch of the hierarchy
         conditionalHierarchy* condHierarchy = createNewConditionalHierarchy(output);
         currHierarchy = condHierarchy->trueHiearchy;
     }
+
+   // Use regular expression to match else statement
     smatch elseMatch;
     const regex elsePattern{"^\\s*else\\s*\\{\\s*$"};
     regex_match(line, elseMatch, elsePattern);
+
+    // If line contains else statement
     if (!elseMatch.empty())
     {
+        // No longer leaving conditional hieararchy
         hierarchyUpdatePending = false;
+
+        // Select the false branch of the conditional hierarchy
         currHierarchy = currHierarchy->parent->falseHiearchy;
     }
+
+    // Use regular expression to match braces at end of if/else statement
     smatch braceMatch;
     const regex bracePattern{"^\\s*\\}\\s*$"};
     regex_match(line, braceMatch, bracePattern);
+
+    // If line is end of if or else statement
     if (!braceMatch.empty())
     {
+        // Return from previous conditional hierarchy if applicable
         returnFromHierarchy();
+
+        // Set flag to leave current conditional hiearchy
+        // Must hit another conditional statement or a statement outside
+        // of the if-else statement to leave conditional hieararchy
         hierarchyUpdatePending = true;
     }
 }
 
+// Function creates a new conditional hierarchy
 conditionalHierarchy* FileParser::createNewConditionalHierarchy(edge* condition)
 {
     conditionalHierarchy* condHierarchy = new conditionalHierarchy;
@@ -224,6 +240,7 @@ conditionalHierarchy* FileParser::createNewConditionalHierarchy(edge* condition)
     return condHierarchy;
 }
 
+// Function creates a join vertex
 vertex* FileParser::createJoinVertex()
 {
     conditionalHierarchy* condHierarchy = currHierarchy->parent;
@@ -456,7 +473,7 @@ edge* FileParser::createNewEdge(string edgeName)
     return newEdge;
 }
 
-int FileParser::checkForUndefinedNets()
+int FileParser::checkForUndefinedEdges()
 {
     if (missingEdges.empty())
     {

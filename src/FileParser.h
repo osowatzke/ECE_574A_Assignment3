@@ -43,7 +43,7 @@ class FileParser
         void returnFromHierarchy();
         vertex* createJoinVertex();
         void getVerticesFromLine(string line);
-        int checkForUndefinedNets();
+        int checkForUndefinedEdges();
 };
 
 } // namespace HighLevelSynthesis
