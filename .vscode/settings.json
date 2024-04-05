@@ -24,6 +24,7 @@
         "random": "cpp",
         "iosfwd": "cpp",
         "xlocale": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "list": "cpp"
     }
 }

@@ -24,6 +24,7 @@ namespace HighLevelSynthesis
     struct vertex
     {
         int time;
+        string dispString;
         state* currState;
         hierarchy* parent;
         VertexType type;
