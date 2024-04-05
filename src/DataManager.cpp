@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <map>
+#include <fstream>
 
 using namespace std;
 
@@ -115,5 +116,34 @@ namespace HighLevelSynthesis
             cout << "]" << endl;
         }
         cout << endl;
+    }
+
+    void DataManager::visualizeGraph()
+    {
+        ofstream digraph;
+        digraph.open("../input.dot");
+        digraph << "digraph {" << endl;
+        map<vertex*, string> vertexMap;
+        int idx = 1;
+        for (vertex* currVertex : vertices)
+        {
+            vertexMap[currVertex] = "v" + to_string(idx++);
+        }
+        string startVertex;
+        string endVertex;
+        for (vertex* currVertex : vertices)
+        {
+            startVertex = vertexMap[currVertex];
+            for (edge* output : currVertex->outputs)
+            {
+                for (vertex* dest : output->dest)
+                {
+                    endVertex = vertexMap[dest];
+                    digraph << "    " << startVertex << " -> " << endVertex << endl;
+                }
+            }
+        }
+        digraph << "}" << endl;
+        digraph.close();
     }
 } // namespace HighLevelSynthesis

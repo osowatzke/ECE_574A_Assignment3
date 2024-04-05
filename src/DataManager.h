@@ -22,6 +22,7 @@ namespace HighLevelSynthesis
             vector<state*> states;
             hierarchy* graphHierarchy;
             void printGraph();
+            void visualizeGraph();
         private:
             void deleteHierarchy(hierarchy* graphHierarchy);
             void printVertices();
