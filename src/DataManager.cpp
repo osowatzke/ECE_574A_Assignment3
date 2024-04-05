@@ -36,10 +36,15 @@ namespace HighLevelSynthesis
         }
 
         // Delete States
-        /*for (state*& currState : states)
+        for (state*& currState : states)
         {
+            // Delete State Transitions
+            for (stateTransition* transition : currState->transitions)
+            {
+                delete(transition);
+            }
             delete(currState);
-        }*/
+        }
         
         deleteHierarchy(graphHierarchy);
     }

@@ -19,7 +19,7 @@ namespace HighLevelSynthesis
             map<string, net*> nets;
             vector<vertex*> vertices;
             vector<edge*> edges;
-            // vector<state*> states;
+            vector<state*> states;
             hierarchy* graphHierarchy;
             void printGraph();
         private:

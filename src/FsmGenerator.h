@@ -13,7 +13,6 @@ class FsmGenerator
 {
     public:
         FsmGenerator(DataManager* dataManager);
-        ~FsmGenerator();
         void run();
     private:
         DataManager* dataManager;

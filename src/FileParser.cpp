@@ -255,25 +255,36 @@ vertex* FileParser::createJoinVertex()
         }
     }
     hierarchy* trueHierarchy = condHierarchy->trueHiearchy;
-    hierarchy* falseHierarchy = condHierarchy->trueHiearchy;
+    hierarchy* falseHierarchy = condHierarchy->falseHiearchy;
     vector<edge*> inputs;
+    cout << "Inputs: " << endl;
     for (string edgeName : edgeNames)
     {
         currHierarchy = trueHierarchy;
-        inputs.push_back(getEdge(edgeName));
+        edge* inputEdge = getEdge(edgeName);
+        inputs.push_back(inputEdge);        
+        cout << edgeName << " = " << inputEdge << endl;
+        // cout << inputs.size() << endl;
         currHierarchy = falseHierarchy;
-        inputs.push_back(getEdge(edgeName));
+        inputEdge = getEdge(edgeName);
+        inputs.push_back(inputEdge);        
+        cout << edgeName << " = " << inputEdge << endl;
+        // cout << inputs.size() << endl;
     }
     currHierarchy = trueHierarchy->parent->parent;
     vector<edge*> outputs;
+    cout << "Outputs: " << endl;
     for (string edgeName : edgeNames)
     {
+        // cout << "Size Pre: " << currHierarchy->edges.size() << endl;
         edge* outputEdge = getEdge(edgeName);
         if (outputEdge->src != NULL)
         {
-            inputs.push_back(getEdge(edgeName));
+            inputs.push_back(outputEdge);
             outputEdge = createNewEdge(edgeName);
         }
+        // cout << "Size Post: " << currHierarchy->edges.size() << endl;
+        cout << edgeName << " = " << outputEdge << endl;
         outputs.push_back(outputEdge);
     }
     return createVertex(VertexType::JOIN, "", inputs, outputs);
@@ -283,8 +294,10 @@ void FileParser::returnFromHierarchy()
 {
     if (hierarchyUpdatePending)
     {
-        createJoinVertex();
-    }
+        vertex* joinVertex = createJoinVertex();
+        cout << "JOIN = " << joinVertex << endl;
+        // cout << "JOIN : IN=" << joinVertex->inputs.size() << " : OUT="  << joinVertex->outputs.size() << endl;
+    } 
     hierarchyUpdatePending = false;
 }
 
@@ -382,7 +395,8 @@ vertex* FileParser::createVertex(VertexType type, string operation, vector<strin
     vector<edge*> inputs;
     for (string& inputName : inputNames)
     {
-        inputs.push_back(getEdge(inputName));
+        edge* inputEdge = getEdge(inputName);
+        inputs.push_back(inputEdge);
     }
     vector<edge*> outputs;
     for (string& outputName : outputNames)

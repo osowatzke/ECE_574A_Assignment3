@@ -12,18 +12,6 @@ namespace HighLevelSynthesis
 FsmGenerator::FsmGenerator(DataManager* dataManager)
     : dataManager(dataManager) {}
 
-FsmGenerator::~FsmGenerator()
-{
-    for (state*& currState : states)
-    {
-        for (stateTransition* transition : currState->transitions)
-        {
-            delete(transition);
-        }
-        delete(currState);
-    }
-}
-
 void FsmGenerator::run()
 {
     /*getHierarchyMap();
@@ -35,7 +23,7 @@ void FsmGenerator::run()
 
 void FsmGenerator::printStates()
 {
-    for (state* currState : states)
+    for (state* currState : dataManager->states)
     {
         cout << currState->name << ":" << endl;
         for (vertex* currVertex : currState->vertices)
@@ -144,7 +132,7 @@ void FsmGenerator::sortStates()
     vector<state*> newStates;
     for (int time = 0; time < getEndTime(); ++time)
     {
-        for (state* currState : states)
+        for (state* currState : dataManager->states)
         {
             if (currState->time == time)
             {
@@ -152,7 +140,7 @@ void FsmGenerator::sortStates()
             }
         }
     }
-    states = newStates;
+    dataManager->states = newStates;
 }
 
 void FsmGenerator::createStates()
@@ -216,7 +204,7 @@ void FsmGenerator::getNextStates(state* currState, int time)
 
 state* FsmGenerator::findState(vector<hierarchy*> hier, int time)
 {
-    for (state* currState : states)
+    for (state* currState : dataManager->states)
     {
         if (currState->time == time)
         {
@@ -248,7 +236,7 @@ state* FsmGenerator::findState(vector<hierarchy*> hier, int time)
 state* FsmGenerator::createState(vector<hierarchy*> hier, int time)
 {
     int numStatesAtTime = 0;
-    for (state* currState : states)
+    for (state* currState : dataManager->states)
     {
         if (currState->time == time)
         {
@@ -273,7 +261,7 @@ state* FsmGenerator::createState(vector<hierarchy*> hier, int time)
             }
         }
     }
-    states.push_back(newState);
+    dataManager->states.push_back(newState);
     return newState;
 }
 
@@ -367,7 +355,7 @@ vector<conditionalHierarchy*> FsmGenerator::getNewConditionals(state* currState,
     return newCondHier;
 }
 
-void FsmGenerator::createAllStates()
+/*void FsmGenerator::createAllStates()
 {
     int endTime = getEndTime();
     for (int time = 0; time < endTime; ++time)
@@ -462,7 +450,7 @@ bool FsmGenerator::isParentHierarchy(hierarchy* currHier, hierarchy* compHier)
         }
     }
     return isParent;
-}
+}*/
 
 int FsmGenerator::getEndTime()
 {
@@ -475,7 +463,7 @@ int FsmGenerator::getEndTime()
     return endTime;
 }
 
-void FsmGenerator::initializeHierarchyMap()
+/*void FsmGenerator::initializeHierarchyMap()
 {
     int endTime = getEndTime();
     int numTimesteps = endTime; // + 1;
@@ -560,6 +548,6 @@ int FsmGenerator::getConditionalEndTime(conditionalHierarchy* condHier)
         }
     }
     return endTime;
-}
+}*/
 
 } // namespace HighLevelSynthesis

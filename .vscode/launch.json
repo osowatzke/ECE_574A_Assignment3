@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/src/hlsyn.exe",
-            "args": ["${workspaceFolder}/testfiles/if_tests/test_if2.c", "16", "test_if2.v"],
+            "args": ["${workspaceFolder}/testfiles/if_tests/test_if3.c", "16", "test_if3.v"],
             "cwd": "${workspaceFolder}"
         }
     ]
