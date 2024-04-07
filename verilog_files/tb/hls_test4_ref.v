@@ -1,6 +1,6 @@
 `timescale 1ns/1ns
 
-module HLSM(Clk, Rst, Start, Done, a, b, c, d, zero, z);
+module HLSM_ref(Clk, Rst, Start, Done, a, b, c, d, zero, z);
 
     parameter LATENCY = 5;
     
