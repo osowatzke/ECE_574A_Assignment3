@@ -16,28 +16,26 @@ namespace HighLevelSynthesis
         #ifndef USE_ALAP_SCHEDULER
         , scheduler(AsapScheduler(&dataManager))
         #endif
-        , fsmGen(FsmGenerator(&dataManager))
+        , fsmGenerator(FsmGenerator(&dataManager))
         , fileWriter(FileWriter(&dataManager)) {}
 
     // Dummy run function. Populate with actual function calls once they are created.
     int HighLevelSynthesisTool::run(string cFile, int latency, string verilogFile)
     {
-        cout << "Generating verilog file \"" << verilogFile << "\" from \"" << cFile << "\" with latency constraint of " << latency << " cycles." << endl;
         int retVal = fileParser.run(cFile);
         if (retVal)
         {
             return retVal;
         }
-        // dataManager.printGraph();
         #ifdef USE_ALAP_SCHEDULER
             scheduler.run(latency - 1);
         #endif
         #ifndef USE_ALAP_SCHEDULER
             scheduler.run();
         #endif
-        fsmGen.run();
-        fileWriter.run(verilogFile);
-        return 0;
+        fsmGenerator.run();
+        retVal = fileWriter.run(verilogFile);
+        return retVal;
     }
 } // namespace HighLevelSynthesis
 

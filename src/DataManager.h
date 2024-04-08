@@ -24,7 +24,7 @@ namespace HighLevelSynthesis
             void printGraph();
             void visualizeGraph();
         private:
-            void deleteHierarchy(hierarchy* graphHierarchy);
+            void deleteHierarchy(hierarchy* hier);
             void printVertices();
             void printEdges();
     };

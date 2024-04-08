@@ -73,6 +73,7 @@ namespace HighLevelSynthesis
         printEdges();
     }
 
+    // Function prints graph vertices along with their corresponding operation
     void DataManager::printVertices()
     {
         for (size_t i = 0; i < vertices.size(); ++i)
@@ -82,13 +83,17 @@ namespace HighLevelSynthesis
         cout << endl;
     }
 
+    // Function prints graph edges
     void DataManager::printEdges()
     {
+        // Create a map from vertices to vertex names
         map<vertex*, string> vertexMap;
         for (size_t i = 0; i < vertices.size(); ++i)
         {
             vertexMap[vertices[i]] = "v" + to_string(i);
         }
+
+        // Print the edge inputs and outputs
         for (edge*& currEdge : edges)
         {
             string currEdgeSrc = "INODE";
@@ -119,15 +124,18 @@ namespace HighLevelSynthesis
         cout << endl;
     }
 
+    // Function creates a file which defines the CDFG
+    // It can be used to visualize the graph in graphviz software
     void DataManager::visualizeGraph()
     {
-        // for inputs
-        // {
-        //      node [shape=plaintext]; a; b;
-        // }
+        // Open graphviz input file
         ofstream digraph;
-        digraph.open("../input.dot");
+        digraph.open("input.dot");
+
+        // Start directed graph
         digraph << "digraph {" << endl;
+
+        // Map vertices to strings
         map<vertex*, string> vertexMap;
         int idx = 1;
         bool hasFork = false;
@@ -144,12 +152,16 @@ namespace HighLevelSynthesis
                 hasJoin = true;
             }
         }
+
+        // If there are fork nodes
         if (hasFork)
         {
+            // Set shapes of FORK nodes to trapeziums
             digraph << "{" << endl;
             digraph << "    node [shape = trapezium];" << endl;
             for (vertex* currVertex : vertices)
             {
+                // Label all FORK nodes as "FORK" in CDFG
                 if (currVertex->type == VertexType::FORK)
                 {
                     digraph << "    " << vertexMap[currVertex] << "[label=\"FORK\"];" << endl;
@@ -157,12 +169,16 @@ namespace HighLevelSynthesis
             }
             digraph << "}" << endl;
         }
+
+        // If there are join nodes
         if (hasJoin)
         {
+            // Set shapes of JOIN nodes to inverse trapeziums
             digraph << "{" << endl;
             digraph << "    node [shape = invtrapezium];" << endl;
             for (vertex* currVertex : vertices)
             {
+                // Label all JOIN nodes as "JOIN" in CDFG
                 if (currVertex->type == VertexType::JOIN)
                 {
                     digraph << "    " << vertexMap[currVertex] << "[label=\"JOIN\"];" << endl;
@@ -170,6 +186,8 @@ namespace HighLevelSynthesis
             }
             digraph << "}" << endl;
         }
+
+        // Connect all the nodes in the CDFG together
         string startVertex;
         string endVertex;
         for (vertex* currVertex : vertices)
@@ -184,8 +202,9 @@ namespace HighLevelSynthesis
                 }
             }
         }
+
+        // Create legend which maps vertices to operations
         digraph << "{" << endl;
-        // digraph << "    rankdir=LR;" << endl;
         digraph << "    rank=sink;" << endl;
         digraph << "    legend [shape=none, margin=0, label=<" << endl;
         digraph << "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">" << endl;
@@ -195,6 +214,7 @@ namespace HighLevelSynthesis
             {
                 string operation = currVertex->operation;
 
+                // Replace "<=" with "="
                 size_t pos = operation.find("<=");
                 while (pos != string::npos)
                 {
@@ -202,6 +222,7 @@ namespace HighLevelSynthesis
                     pos = operation.find("<=", pos + 1);
                 }
 
+                // Handle greater than symbols
                 pos = operation.find("<");
                 while (pos != string::npos)
                 {
@@ -209,13 +230,13 @@ namespace HighLevelSynthesis
                     pos = operation.find("<", pos + 4);
                 }
 
+                // Handle less than symbols
                 pos = operation.find(">");
                 while (pos != string::npos)
                 {
                     operation.replace(pos, 1, "&lt;");
                     pos = operation.find(">", pos + 4);
                 }
-                // operation.replace(remove(operation.begin(), operation.end(), '<'), "&gt");
                 digraph << "    <TR><TD>" << vertexMap[currVertex] << "</TD><TD>" << operation << "</TD></TR>" << endl;
             }
         }
@@ -223,5 +244,9 @@ namespace HighLevelSynthesis
         digraph << "}" << endl;
         digraph << "}" << endl;
         digraph.close();
+
+        // Additional system calls to view the output CDFG
+        // system("dot -Tsvg input.dot > output.svg");
+        // system("start msedge file://\%cd\%/output.svg");
     }
 } // namespace HighLevelSynthesis

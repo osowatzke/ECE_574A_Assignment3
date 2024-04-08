@@ -126,7 +126,7 @@ void FileWriter::declareStateTransition(state* currState, vector<bool> condition
         state* nextState = getNextState(currState, condition);
 
         // Print the next state to the verilog file
-        verilogFile << tab(indent) << "state <= " << nextState->name << endl;
+        verilogFile << tab(indent) << "State <= " << nextState->name << ";" << endl;
     }
     // Maximum condition depth not reached
     else

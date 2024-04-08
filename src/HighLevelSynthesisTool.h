@@ -11,6 +11,13 @@
 #include <string>
 
 #define USE_ALAP_SCHEDULER
+#define DEBUG_GRAPH
+
+#if (defined(_WIN32) || defined(__CYGWIN__))
+#define PATH_SEPARATOR "\\"
+#else
+#define PATH_SEPARATOR "/"
+#endif
 
 using namespace std;
 
@@ -21,7 +28,7 @@ class HighLevelSynthesisTool
 {
     public:
         HighLevelSynthesisTool();
-        int run(string cFile, int latency, string verilogFile);
+        int run(string cFile, int latency, string verilogFile); //, string debugDir);
     private:
         DataManager dataManager;
         FileParser fileParser;
@@ -31,7 +38,7 @@ class HighLevelSynthesisTool
         #ifndef USE_ALAP_SCHEDULER
             AsapScheduler scheduler;
         #endif
-        FsmGenerator fsmGen;
+        FsmGenerator fsmGenerator;
         FileWriter fileWriter;
 };
 

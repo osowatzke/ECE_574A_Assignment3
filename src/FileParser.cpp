@@ -34,10 +34,7 @@ int FileParser::run(string filePath)
     getVertices();
 
     // Determine if any edges were not defined by a net
-    retVal = checkForUndefinedEdges();
-
-    dataManager->visualizeGraph();
-    
+    retVal = checkForUndefinedEdges();    
     return retVal;
 }
 
