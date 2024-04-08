@@ -16,18 +16,14 @@ class FsmGenerator
         void run();
     private:
         DataManager* dataManager;
-        vector<vector<hierarchy*>> hierarchyMap;
-        vector<state*> states;
-        int getConditionalStartTime(conditionalHierarchy* condHier);
-        int getConditionalEndTime(conditionalHierarchy* condHier);
+        void createStates();
+        void sortStates();
         int getEndTime();
         void getNextStates(state* currState, int time);
         state* createNewState(vector<hierarchy*> hier, int time);
+        state* findState(vector<hierarchy*> hier, int time);
         bool upcomingConditionalEnd(hierarchy* hier, int time);
         vector<conditionalHierarchy*> getNewConditionals(state* currState, int time);
-        void createStates();
-        void sortStates();
-        state* findState(vector<hierarchy*> hier, int time);
 };
 
 } // namepsace HighLevelSynthesis
