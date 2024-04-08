@@ -52,27 +52,51 @@ void FsmGenerator::createStates()
     getNextStates(initialState, 0);
 }
 
+// Function gets the next states
 void FsmGenerator::getNextStates(state* currState, int time)
 {
+    // Create an empty vector for the updated hierarchy
     vector <hierarchy*> hierUpdate;
+
+    // Loop through the hierarchies in the current state
     for (hierarchy* hier : currState->hier)
     {
+        // Determine whether the hierarchy is coming to an end
         bool removeHier = upcomingConditionalEnd(hier, time);
+
+        // If not, add the hierarchy to the updated list of hierarchies
         if (!removeHier)
         {
             hierUpdate.push_back(hier);
         }
     }
+
+    // Get a vector of new hiearchies from if-else statements
     vector <conditionalHierarchy*> condHierUpdate = getNewConditionals(currState, time);
+
+    // Determine the number of states that the current state transitions to
+    // 2^N states for N conditionals 
     int numStates = (1 << condHierUpdate.size());
+
+    // Loop through each of the new states
     for (int i = 0; i < numStates; ++i)
     {
+        // Copy all the current hierarchies into the new hierarchy vector
         vector<hierarchy*> newHier = hierUpdate;
+
+        // Create an empty vector of strings for the conditional logic
         vector<string> condition(condHierUpdate.size());
+
+        // Create a vector of booleans for the true/false conditions
         vector<bool> isTrue(condHierUpdate.size());
+
+        // Loop through each of the conditions
         for (int j = 0; j < condHierUpdate.size(); ++j)
         {
+            // Get the condition within the conditional 
             edge* condEdge = condHierUpdate[j]->condition;
+
+            // Find the conditional block
             vertex* condVertex = condEdge->src;
             condition[j] = condVertex->operation;
             isTrue[j] = (i & (1 << j)) != 0;
