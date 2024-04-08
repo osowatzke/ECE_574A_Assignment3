@@ -12,7 +12,7 @@ class FileWriter
 {
     public:
         FileWriter(DataManager* dataManager);
-        void run(string filePath);
+        int run(string filePath);
     private:
         DataManager* dataManager;
         ofstream verilogFile;
@@ -21,13 +21,14 @@ class FileWriter
         void declareModule();
         void terminateModule();
         void declareNets();
-        int determineNumUniqueStates();
-        void declareStates();
+        void declareStateNet();
         void declareFsm();
         void declareFsmReset();
-        void declareFsmStates();
         string tab();
         string tab(int numTabs);
+        void declareFsmStates();
+        void declareStateTransition(state* currState, vector<bool> condition, int depth);
+        state* getNextState(state* currState, vector<bool> condition);
 };
 
 } // namespace HighLevelSynthesis

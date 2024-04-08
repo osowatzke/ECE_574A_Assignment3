@@ -1,6 +1,7 @@
 #ifndef GUARD_GraphComponents_h
 #define GUARD_GraphComponents_h
 
+#include <map>
 #include <vector>
 
 using namespace std;
@@ -15,15 +16,54 @@ namespace HighLevelSynthesis
         vector<vertex*> dest;
     };
 
-    enum VertexType{DIV, ADD, MUL, LOGIC};
-                                             
+    enum VertexType{DIV, ADD, MUL, LOGIC, FORK, JOIN};
+
+    struct hierarchy;
+
     struct vertex
     {
         int time;
+        hierarchy* parent;
         VertexType type;
         string operation; // Operation that will be implemented in HLSM
         vector <edge*> inputs; 
         vector <edge*> outputs;
+    };
+
+    struct conditionalHierarchy;
+
+    struct hierarchy
+    {
+        conditionalHierarchy* parent;
+        vector<conditionalHierarchy*> conditional;
+        vector<vertex*> vertices;
+        map<string, edge*> edges;
+    };
+
+    struct conditionalHierarchy
+    {
+        edge* condition;
+        hierarchy* parent;
+        hierarchy* trueHierarchy;
+        hierarchy* falseHierarchy;
+    };
+
+    struct stateTransition;
+
+    struct state
+    {
+        int time;
+        string name;
+        vector<vertex*> vertices;
+        vector<hierarchy*> hier;
+        vector<stateTransition*> transitions;
+    };
+
+    struct stateTransition
+    {
+        vector<string> condition;
+        vector<bool> isTrue;
+        state* nextState;
     };
 
     const int DIV_TIME = 3;
@@ -33,15 +73,20 @@ namespace HighLevelSynthesis
 
     inline int getVertexRunTime(vertex* currVertex)
     {
-        int runTime = 1;
         switch (currVertex->type)
         {
-            case VertexType::DIV :
-                runTime = 3;
-            case VertexType::MUL :
-                runTime = 2;
+            case VertexType::DIV:
+                return DIV_TIME;
+            case VertexType::ADD:
+                return ADD_TIME;
+            case VertexType::MUL:
+                return MUL_TIME;
+            case VertexType::LOGIC:
+                return LOGIC_TIME;
+            case VertexType::FORK:
+                return 1;
         }
-        return runTime;
+        return 0;
     }
     
     inline int getVertexEndTime(vertex* currVertex)

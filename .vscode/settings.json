@@ -19,6 +19,12 @@
         "utility": "cpp",
         "new": "cpp",
         "typeinfo": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "limits": "cpp",
+        "random": "cpp",
+        "iosfwd": "cpp",
+        "xlocale": "cpp",
+        "bitset": "cpp",
+        "list": "cpp"
     }
 }

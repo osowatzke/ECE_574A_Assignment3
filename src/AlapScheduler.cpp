@@ -1,6 +1,9 @@
 #include "AlapScheduler.h"
 
 #include <limits>
+#include <iostream>
+
+using namespace std;
 
 namespace HighLevelSynthesis
 {
@@ -34,7 +37,7 @@ void AlapScheduler::run(int latency)
 
 bool AlapScheduler::successorsScheduled(vertex* currVertex)
 {
-    for (edge* output : currVertex->outputs)
+    for (edge*& output : currVertex->outputs)
     {
         for(vertex*& dest : output->dest)
         {

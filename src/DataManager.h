@@ -14,12 +14,17 @@ namespace HighLevelSynthesis
     class DataManager
     {
         public:
+            DataManager();
             ~DataManager();
             map<string, net*> nets;
             vector<vertex*> vertices;
             vector<edge*> edges;
+            vector<state*> states;
+            hierarchy* graphHierarchy;
             void printGraph();
+            void visualizeGraph();
         private:
+            void deleteHierarchy(hierarchy* hier);
             void printVertices();
             void printEdges();
     };
