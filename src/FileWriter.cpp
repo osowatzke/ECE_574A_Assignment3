@@ -38,16 +38,29 @@ int FileWriter::run(string filePath)
     return 0;
 }
 
-void FileWriter::printStates()
+// Function declares the states of the FSM
+void FileWriter::declareFsmStates()
 {
+    // Assume that the FSM will transition from Wait to Final
     string firstStateName = "Final";
+
+    // If the state manager has any states
     if (!dataManager->states.empty())
     {
+        // Update the name of teh first state
         firstStateName = dataManager->states[0]->name;
     }
+
+    // Declare else statement (when Rst=0)
     verilogFile << tab(2) << "else begin" << endl;
+
+    // Declare default value for Done signal
     verilogFile << tab(3) << "Done <= 0;" << endl;
+
+    // Create case statement for each state of the FSM
     verilogFile << tab(3) << "case (State)" << endl;
+
+    // Declare the Wait state
     verilogFile << tab(4) << "Wait : begin" << endl;
     verilogFile << tab(5) << "if (Start == 1) begin" << endl;
     verilogFile << tab(6) << "State <= " << firstStateName << ";" << endl;
@@ -57,73 +70,111 @@ void FileWriter::printStates()
     }
     verilogFile << tab(5) << "end" << endl;
     verilogFile << tab(4) << "end" << endl;
+
+    // Declare the subsequent states in the FSM
     for (state* currState : dataManager->states)
     {
+        // Add condition to case statement
         verilogFile << tab(4) << currState->name << " : begin" << endl;
+
+        // Add vertices to state
         for (vertex* currVertex : currState->vertices)
         {
             verilogFile << tab(5) << currVertex->operation << ";" << endl;
         }
+
+        // If state has no transitions, it is the end of the user-defined states
+        // Transition to Final State and Assert Done signal
         if (currState->transitions.empty())
         {
             verilogFile << tab(5) << "State <= Final;" << endl;
             verilogFile << tab(5) << "Done <= 1;" << endl;
         }
+        // Declare state transition
         else
         {
-            printStateTransition(currState, {}, 0);
+            declareStateTransition(currState, {}, 0);
         }
+
+        // End condition
         verilogFile << tab(4) << "end" << endl;
     }
+
+    // Declare final state in FSM
     verilogFile << tab(4) << "Final : begin" << endl;
     verilogFile << tab(5) << "State <= Wait;" << endl;
     verilogFile << tab(4) << "end" << endl;
+
+    // Terminate the case statement and if-else statement
     verilogFile << tab(3) << "endcase" << endl;
     verilogFile << tab(2) << "end" << endl;
 }
 
-void FileWriter::printStateTransition(state* currState, vector<bool> condition, int depth)
+// Function declares a state transition
+void FileWriter::declareStateTransition(state* currState, vector<bool> condition, int depth)
 {
+    // Get the transitions of the current state
     vector<stateTransition*> transitions = currState->transitions;
+
+    // Set the indent
     int indent = depth + 5;
+
+    // Maximum conditional depth reached
     if (transitions.size() == (1 << depth))
     {
+        // Determine the next state
         state* nextState = getNextState(currState, condition);
+
+        // Print the next state to the verilog file
         verilogFile << tab(indent) << "state <= " << nextState->name << endl;
     }
+    // Maximum condition depth not reached
     else
     {
+        // Print conditional statement
         verilogFile << tab(indent) << currState->transitions[0]->condition[depth] << " begin" << endl;
+
+        // Print true branch of conditional statement
         vector<bool> nextCondition = condition;
         nextCondition.push_back(true);
-        printStateTransition(currState, nextCondition, depth + 1);
+        declareStateTransition(currState, nextCondition, depth + 1);
         verilogFile << tab(indent) << "end" << endl;
+
+        // Print false branch of conditional statement
         verilogFile << tab(indent) << "else begin" << endl;
-        nextCondition = {};
         nextCondition = condition;
         nextCondition.push_back(false);
-        printStateTransition(currState, nextCondition, depth + 1);
+        declareStateTransition(currState, nextCondition, depth + 1);
         verilogFile << tab(indent) << "end" << endl;
     }
 }
 
+// Function determines the next state
 state* FileWriter::getNextState(state* currState, vector<bool> condition)
 {
+    // Loop through the transitions of the current state
     for (stateTransition* transition : currState->transitions)
     {
+        // Assume that the transition matches the conditions
         bool match = true;
+
+        // Loop through each of the conditions
         for (size_t i = 0; i < condition.size(); ++i)
         {
+            // If transition does not match condition
             if (transition->isTrue[i] != condition[i])
             {
                 match = false;
             }
         }
+        // If transition does not match conditions
         if (match)
         {
+            // Return the next state defined by the transition
             return transition->nextState;
         }
     }
+    // Return NULL pointer for no next state
     return NULL;
 }
 
@@ -148,22 +199,33 @@ void FileWriter::closeFile()
     verilogFile.close();
 }
 
+// Function declares the FSM reset
 void FileWriter::declareFsmReset()
 {
+    // Add reset if statement to FSM
     verilogFile << tab(2) << "if (Rst == 1) begin" << endl;
+
+    // Loop through all the nets
     auto netStart = dataManager->nets.begin();
     auto netEnd = dataManager->nets.end();
     for (auto netIt = netStart; netIt != netEnd; ++netIt)
     {
         string netName = netIt->first;
         net* currNet = netIt->second;
+
+        // If net is a variable or an output, it is driven by the FSM
+        // Set net to 0 during reset
         if ((currNet->type == NetType::OUTPUT) || (currNet->type == NetType::VARIABLE))
         {
             verilogFile << tab(3) << netName << " <= 0;" << endl;
         }
     }
+
+    // Set fixed FSM outputs
     verilogFile << tab(3) << "Done <= 0;" << endl;
     verilogFile << tab(3) << "State <= Wait;" << endl;
+
+    // Terminate reset if statement
     verilogFile << tab(2) << "end" << endl;
 }
 
@@ -186,16 +248,24 @@ string FileWriter::tab(int numTabs)
     return retVal;
 }
 
+// Function declares FSM process
 void FileWriter::declareFsm()
 {
+    // Print start of procedure to file
     verilogFile << tab(1) << "always @(posedge Clk) begin" << endl;
+
+    // Declare the FSM reset logic
     declareFsmReset();
-    printStates();
+
+    // Declare the FSM states
+    declareFsmStates();
+
+    // Print end of procedure to file
     verilogFile << tab(1) << "end" << endl << endl;
 }
 
 // Function defines local parameters for each of the FSM states
-void FileWriter::declareStates()
+void FileWriter::declareStateNet()
 {
     // Create local parameter for fixed states
     verilogFile << tab() << "localparam " << "Wait = 0," << endl;
@@ -340,7 +410,7 @@ void FileWriter::declareNets()
     }
 
     // Declare FSM states
-    declareStates();
+    declareStateNet();
 }
 
 // Function declares module

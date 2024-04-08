@@ -21,13 +21,13 @@ class FileWriter
         void declareModule();
         void terminateModule();
         void declareNets();
-        void declareStates();
+        void declareStateNet();
         void declareFsm();
         void declareFsmReset();
         string tab();
         string tab(int numTabs);
-        void printStates();
-        void printStateTransition(state* currState, vector<bool> condition, int depth);
+        void declareFsmStates();
+        void declareStateTransition(state* currState, vector<bool> condition, int depth);
         state* getNextState(state* currState, vector<bool> condition);
 };
 
