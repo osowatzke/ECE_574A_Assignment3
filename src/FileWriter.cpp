@@ -167,18 +167,22 @@ void FileWriter::declareFsmReset()
     verilogFile << tab(2) << "end" << endl;
 }
 
+// Function returns a single tab in spaces
 string FileWriter::tab()
 {
     return "    ";
 }
 
+// Function returns multiple tabs in spaces
 string FileWriter::tab(int numTabs)
 {
+    // Append multiple tabs onto string
     string retVal;
     for (int i = 0; i < numTabs; ++i)
     {
         retVal += tab();
     }
+    // Return string containing multiple tabs
     return retVal;
 }
 
