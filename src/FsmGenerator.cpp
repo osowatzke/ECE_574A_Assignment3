@@ -46,9 +46,13 @@ void FsmGenerator::sortStates()
     dataManager->states = newStates;
 }
 
+// Function creates the states of the HLSM
 void FsmGenerator::createStates()
 {
+    // Create the initial state
     state* initialState = createNewState({dataManager->graphHierarchy}, 0);
+
+    // Determine the next states for the initial state
     getNextStates(initialState, 0);
 }
 
@@ -96,10 +100,17 @@ void FsmGenerator::getNextStates(state* currState, int time)
             // Get the condition within the conditional 
             edge* condEdge = condHierUpdate[j]->condition;
 
-            // Find the conditional block
+            // Find the FORK vertex associated with the conditional
             vertex* condVertex = condEdge->src;
+
+            // Extract the conditional operation from the current vertex
             condition[j] = condVertex->operation;
+
+            // Select whether the current condition is true or not
+            // Use each bit of the state index
             isTrue[j] = (i & (1 << j)) != 0;
+
+            // Select a true or false hierarchy for the next state
             if (isTrue[j])
             {
                 newHier.push_back(condHierUpdate[j]->trueHierarchy);
@@ -109,14 +120,23 @@ void FsmGenerator::getNextStates(state* currState, int time)
                 newHier.push_back(condHierUpdate[j]->falseHierarchy);
             }
         }
+        // If the next time is within the HLSM end time
         if ((time + 1) <= getEndTime())
         {
+            // Attempt to find the next state
             state* nextState = findState(newHier, time+1);
+
+            // If the next state does not exist
             if (nextState == NULL)
             {
+                // Create the next state
                 nextState = createNewState(newHier, time+1);
+
+                // Determine the next states for the next state
                 getNextStates(nextState, time+1);
             }
+
+            // Add a transition from the current state to the next state
             stateTransition* transition = new stateTransition;
             transition->condition = condition;
             transition->isTrue = isTrue;
