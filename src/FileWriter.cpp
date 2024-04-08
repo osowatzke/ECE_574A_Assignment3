@@ -9,14 +9,33 @@ namespace HighLevelSynthesis
 FileWriter::FileWriter(DataManager* dataManager)
     : dataManager(dataManager) {}
 
-void FileWriter::run(string filePath)
+// Function writes verilog file for HLSM
+int FileWriter::run(string filePath)
 {
-    openFile(filePath);
+    // Attempt to open the verilog file
+    int retVal = openFile(filePath);
+
+    // If opening the verilog file fails, return with error
+    if (retVal)
+    {
+        return retVal;
+    }
+
+    // Declare module name
     declareModule();
+
+    // Declare module nets (inputs, outputs, variables)
     declareNets();
+
+    // Declare the FSM
     declareFsm();
+
+    // End the module
     terminateModule();
+
+    // Close the file
     closeFile();
+    return 0;
 }
 
 void FileWriter::printStates()
@@ -108,6 +127,7 @@ state* FileWriter::getNextState(state* currState, vector<bool> condition)
     return NULL;
 }
 
+// Function opens the verilog file for writing
 int FileWriter::openFile(string filePath)
 {
      // Attempt to open file
@@ -122,6 +142,7 @@ int FileWriter::openFile(string filePath)
     return 0;
 }
 
+// Function closes the verilog file
 void FileWriter::closeFile()
 {
     verilogFile.close();
@@ -169,17 +190,32 @@ void FileWriter::declareFsm()
     verilogFile << tab(1) << "end" << endl << endl;
 }
 
+// Function defines local parameters for each of the FSM states
 void FileWriter::declareStates()
 {
+    // Create local parameter for fixed states
     verilogFile << tab() << "localparam " << "Wait = 0," << endl;
+
+    // Set the current state index
     int stateIdx = 1;
+
+    // Loop through all the states
     for (state* currState : dataManager->states)
     {
+        // Print state enumeration to file
         verilogFile << tab(3) << "   " << currState->name << " = " << stateIdx << "," << endl;
+
+        // Increment state index
         stateIdx++;
     }
+
+    // Print file state to file
     verilogFile << tab(3) << "   " << "Final = " << stateIdx << ";" << endl << endl;
+
+    // Determine the number of bits needed to represent the state vector
     int numStateBits = static_cast<int>(ceil(log2(stateIdx + 1)));
+
+    // Print the state register to the file
     verilogFile << tab() << "reg ";
     if (numStateBits > 1)
     {
@@ -188,20 +224,31 @@ void FileWriter::declareStates()
     verilogFile << "State;" << endl << endl;
 }
 
+// Function declares the nets (inputs, outputs, wires, and registers)
 void FileWriter::declareNets()
 {
+    // Print fixed inputs and outputs to file
     verilogFile << tab() << "input Clk, Rst, Start;" << endl;
     verilogFile << tab() << "output reg Done;" << endl << endl;
+
+    // Assume that there are no unique inputs
     bool uniqueInputs = false;
+
+    // Loop through all the nets
     auto netStart = dataManager->nets.begin();
     auto netEnd = dataManager->nets.end();
     for (auto netIt = netStart; netIt != netEnd; netIt++)
     {
         string netName = netIt->first;
         net* currNet = netIt->second;
+
+        // If net is an input
         if (currNet->type == NetType::INPUT)
         {
+            // Set the unique inputs flag high
             uniqueInputs = true;
+
+            // Write input to the file
             verilogFile << tab() << "input ";
             if (currNet->width > 1)
             {
@@ -214,19 +261,28 @@ void FileWriter::declareNets()
             verilogFile << netName << ";" << endl;
         }
     }
+    // Add newline between unique inputs and outputs
     if (uniqueInputs)
     {
         verilogFile << endl;
     }
 
+    // Assume that there are no unique outputs
     bool uniqueOutputs = false;
+
+    // Loop through all the nets
     for (auto netIt = netStart; netIt != netEnd; netIt++)
     {
         string netName = netIt->first;
         net* currNet = netIt->second;
+
+        // If net is an output
         if (currNet->type == NetType::OUTPUT)
         {
+            // Set the unique outputs flag high
             uniqueOutputs = true;
+
+            // Print output to the file
             verilogFile << tab() << "output reg ";
             if (currNet->width > 1)
             {
@@ -239,19 +295,28 @@ void FileWriter::declareNets()
             verilogFile << netName << ";" << endl;
         }
     }
+    // Add newline between unique outputs and registers
     if (uniqueOutputs)
     {
         verilogFile << endl;
     }
 
+    // Assume there are no unique registers
     bool uniqueReg = false;
+
+    // Loop through all the nets
     for (auto netIt = netStart; netIt != netEnd; netIt++)
     {
         string netName = netIt->first;
         net* currNet = netIt->second;
+
+        // If net is a variable
         if (currNet->type == NetType::VARIABLE)
         {
+            // Set the unique register flag high
             uniqueReg = true;
+
+            // Print register to the file
             verilogFile << tab() << "reg ";
             if (currNet->width > 1)
             {
@@ -264,40 +329,60 @@ void FileWriter::declareNets()
             verilogFile << netName << ";" << endl;
         }
     }
+    // Add newline between unique outputs and FSM states
     if (uniqueReg)
     {
         verilogFile << endl;
     }
+
+    // Declare FSM states
     declareStates();
 }
 
+// Function declares module
 void FileWriter::declareModule()
 {
+    // Print timescale to the file
     verilogFile << "`timescale 1ns/1ns" << endl << endl;
+
+    // Print fixed module name and fixed module inputs/outputs
     verilogFile << "module HLSM(Clk, Rst, Start, Done";
+
+    // Loop through all the nets
     auto netStart = dataManager->nets.begin();
     auto netEnd = dataManager->nets.end();
     for (auto netIt = netStart; netIt != netEnd; netIt++)
     {
         string netName = netIt->first;
         net* currNet = netIt->second;
+
+        // If net is an input
         if (currNet->type == NetType::INPUT)
         {
+            // Write input name to the file
             verilogFile << ", " << netName;
         }
     }
+    
+    // Loop through all the nets
     for (auto netIt = netStart; netIt != netEnd; netIt++)
     {
         string netName = netIt->first;
         net* currNet = netIt->second;
+
+        // If net is an output
         if (currNet->type == NetType::OUTPUT)
         {
+            // Write output name to the file
             verilogFile << ", " << netName;
         }
     }
+
+    // End module declaration
     verilogFile << ");" << endl;
 }
 
+// Function terminates module
 void FileWriter::terminateModule()
 {
     verilogFile << "endmodule" << endl;

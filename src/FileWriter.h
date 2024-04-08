@@ -12,7 +12,7 @@ class FileWriter
 {
     public:
         FileWriter(DataManager* dataManager);
-        void run(string filePath);
+        int run(string filePath);
     private:
         DataManager* dataManager;
         ofstream verilogFile;
