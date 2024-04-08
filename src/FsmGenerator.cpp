@@ -48,7 +48,7 @@ void FsmGenerator::sortStates()
 
 void FsmGenerator::createStates()
 {
-    state* initialState = createState({dataManager->graphHierarchy}, 0);
+    state* initialState = createNewState({dataManager->graphHierarchy}, 0);
     getNextStates(initialState, 0);
 }
 
@@ -90,7 +90,7 @@ void FsmGenerator::getNextStates(state* currState, int time)
             state* nextState = findState(newHier, time+1);
             if (nextState == NULL)
             {
-                nextState = createState(newHier, time+1);
+                nextState = createNewState(newHier, time+1);
                 getNextStates(nextState, time+1);
             }
             stateTransition* transition = new stateTransition;
@@ -102,39 +102,57 @@ void FsmGenerator::getNextStates(state* currState, int time)
     }
 }
 
+// Function attempts to find a state which matches a vector of hierachies at a given timestep
 state* FsmGenerator::findState(vector<hierarchy*> hier, int time)
 {
+    // Loop through all the states in the data manager
     for (state* currState : dataManager->states)
     {
+        // If the current state matches the input time
         if (currState->time == time)
         {
+            // Assume hierarchy matches
             bool hierMatch = true;
+
+            // Loop through the input hierarchies
             for (hierarchy* currHier : hier)
             {
+                // Assume that the element of the hierarchy has no match
                 bool hierElementMatch = false;
+
+                // Loop through the hiearchies in the current state
                 for (hierarchy* compHier : currState->hier)
                 {
+                    // Determine whether the hierachies match
                     if (currHier == compHier)
                     {
                         hierElementMatch = true;
                     }
                 }
+
+                // If the hierachies don't match, set the hiearchies
+                // match flag to false
                 if (!hierElementMatch)
                 {
                     hierMatch = false;
                 }
             }
+            // If the hierachies match, the states are the same
             if (hierMatch)
             {
+                // Return current state
                 return currState;
             }
         }
     }
+    // Return a NULL pointer if there is no matching state 
     return NULL;
 }
 
-state* FsmGenerator::createState(vector<hierarchy*> hier, int time)
+// Function creates a new state
+state* FsmGenerator::createNewState(vector<hierarchy*> hier, int time)
 {
+    // Determine the number of states scheduled at the current timestep
     int numStatesAtTime = 0;
     for (state* currState : dataManager->states)
     {
@@ -143,25 +161,36 @@ state* FsmGenerator::createState(vector<hierarchy*> hier, int time)
             numStatesAtTime++;
         }
     }
+    
+    // Create new state
     state* newState = new state;
     string name = "State" + to_string(time) + "_" + to_string(numStatesAtTime);
     newState->name = name;
     newState->time = time;
     newState->hier = hier;
+
+    // Loop through the hierarchies associated with the current state
     for (hierarchy* currHier : newState->hier)
     {
+        // Loop through all the vertices in the given hierarchy
         for (vertex* currVertex : currHier->vertices)
         {
+            // If the vertice is scheduled at the same time as the state
             if (currVertex->time == time)
             {
+                // If the vertex is not a FORK or JOIN vertex
                 if (currVertex->type != VertexType::FORK && currVertex->type != VertexType::JOIN)
                 {
+                    // Add vertex to state
                     newState->vertices.push_back(currVertex);
                 }
             }
         }
     }
+    // Append state to array of states
     dataManager->states.push_back(newState);
+
+    // Return new state
     return newState;
 }
 
