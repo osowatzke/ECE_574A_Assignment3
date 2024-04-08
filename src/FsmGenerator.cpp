@@ -66,11 +66,11 @@ void FsmGenerator::getNextStates(state* currState, int time)
             isTrue[j] = (i & (1 << j)) != 0;
             if (isTrue[j])
             {
-                newHier.push_back(condHierUpdate[j]->trueHiearchy);
+                newHier.push_back(condHierUpdate[j]->trueHierarchy);
             }
             else
             {
-                newHier.push_back(condHierUpdate[j]->falseHiearchy);
+                newHier.push_back(condHierUpdate[j]->falseHierarchy);
             }
         }
         if ((time + 1) < getEndTime())
@@ -159,8 +159,8 @@ bool FsmGenerator::upcomingConditionalEnd(hierarchy* hier, int time)
     {
         if (hier->parent != NULL)
         {
-            hierarchy* trueHier = hier->parent->trueHiearchy;
-            hierarchy* falseHier = hier->parent->falseHiearchy;
+            hierarchy* trueHier = hier->parent->trueHierarchy;
+            hierarchy* falseHier = hier->parent->falseHierarchy;
             if (hier == trueHier)
             {
                 hier = falseHier;

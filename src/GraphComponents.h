@@ -19,13 +19,10 @@ namespace HighLevelSynthesis
     enum VertexType{DIV, ADD, MUL, LOGIC, FORK, JOIN};
 
     struct hierarchy;
-    struct state;
 
     struct vertex
     {
         int time;
-        string dispString;
-        state* currState;
         hierarchy* parent;
         VertexType type;
         string operation; // Operation that will be implemented in HLSM
@@ -47,12 +44,10 @@ namespace HighLevelSynthesis
     {
         edge* condition;
         hierarchy* parent;
-        hierarchy* trueHiearchy;
-        hierarchy* falseHiearchy;
+        hierarchy* trueHierarchy;
+        hierarchy* falseHierarchy;
     };
 
-    
-    struct conditionalState;
     struct stateTransition;
 
     struct state
@@ -62,27 +57,6 @@ namespace HighLevelSynthesis
         vector<vertex*> vertices;
         vector<hierarchy*> hier;
         vector<stateTransition*> transitions;
-        // stateTree* nextState;
-        // stateTree*
-        /*state* prevState;
-        state* nextState;
-        conditionalState* nextCondState;*/
-    };
-
-    struct conditionalState
-    {
-        string condition;
-        state* trueState;
-        state* falseState;
-        conditionalState* trueCondState;
-        conditionalState* falseCondState;
-    };
-
-    struct stateTree
-    {
-        state* nextState;
-        stateTree* trueState;
-        stateTree* falseState;
     };
 
     struct stateTransition

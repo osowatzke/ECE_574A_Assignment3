@@ -55,13 +55,13 @@ namespace HighLevelSynthesis
     {
         for (conditionalHierarchy*& condHierarchy : hier->conditional)
         {
-            if (condHierarchy->trueHiearchy != NULL)
+            if (condHierarchy->trueHierarchy != NULL)
             {
-                deleteHierarchy(condHierarchy->trueHiearchy);
+                deleteHierarchy(condHierarchy->trueHierarchy);
             }
-            if (condHierarchy->falseHiearchy != NULL)
+            if (condHierarchy->falseHierarchy != NULL)
             {
-                deleteHierarchy(condHierarchy->falseHiearchy);
+                deleteHierarchy(condHierarchy->falseHierarchy);
             }
         }
         delete(hier);

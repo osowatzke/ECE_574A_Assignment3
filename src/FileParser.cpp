@@ -192,7 +192,7 @@ void FileParser::parseConditionalStatements(string line)
 
         // Create a new conditional hierarchy and select the true branch of the hierarchy
         conditionalHierarchy* condHierarchy = createNewConditionalHierarchy(output);
-        currHierarchy = condHierarchy->trueHiearchy;
+        currHierarchy = condHierarchy->trueHierarchy;
     }
 
    // Use regular expression to match else statement
@@ -207,7 +207,7 @@ void FileParser::parseConditionalStatements(string line)
         hierarchyUpdatePending = false;
 
         // Select the false branch of the conditional hierarchy
-        currHierarchy = currHierarchy->parent->falseHiearchy;
+        currHierarchy = currHierarchy->parent->falseHierarchy;
     }
 
     // Use regular expression to match braces at end of if/else statement
@@ -221,7 +221,7 @@ void FileParser::parseConditionalStatements(string line)
         // Return from previous conditional hierarchy if applicable
         returnFromHierarchy();
 
-        // Set flag to leave current conditional hiearchy
+        // Set flag to leave current conditional hierarchy
         // Must hit another conditional statement or a statement outside
         // of the if-else statement to leave conditional hieararchy
         hierarchyUpdatePending = true;
@@ -236,10 +236,10 @@ conditionalHierarchy* FileParser::createNewConditionalHierarchy(edge* condition)
     condHierarchy->condition = condition;
 
     // Create true and false hierarchies for either branch of the conditional hierarchy
-    condHierarchy->trueHiearchy = new hierarchy;
-    condHierarchy->trueHiearchy->parent = condHierarchy;
-    condHierarchy->falseHiearchy = new hierarchy;
-    condHierarchy->falseHiearchy->parent = condHierarchy;
+    condHierarchy->trueHierarchy = new hierarchy;
+    condHierarchy->trueHierarchy->parent = condHierarchy;
+    condHierarchy->falseHierarchy = new hierarchy;
+    condHierarchy->falseHierarchy->parent = condHierarchy;
 
     // Append conditional hierarchy to array of conditional hierarchies
     currHierarchy->conditional.push_back(condHierarchy);
@@ -254,8 +254,8 @@ vertex* FileParser::createJoinVertex()
     conditionalHierarchy* condHierarchy = currHierarchy->parent;
 
     // Get the edge names initialized in the true hierarchy
-    auto start = condHierarchy->trueHiearchy->edges.begin();
-    auto end = condHierarchy->trueHiearchy->edges.end();
+    auto start = condHierarchy->trueHierarchy->edges.begin();
+    auto end = condHierarchy->trueHierarchy->edges.end();
     vector<string> edgeNames;
     for (auto it = start; it != end; ++it)
     {
@@ -264,8 +264,8 @@ vertex* FileParser::createJoinVertex()
     }
 
     // Get additional edge names initialized in the false hierarchy
-    start = condHierarchy->falseHiearchy->edges.begin();
-    end = condHierarchy->falseHiearchy->edges.end();
+    start = condHierarchy->falseHierarchy->edges.begin();
+    end = condHierarchy->falseHierarchy->edges.end();
     vector<string> initialEdgeNames = edgeNames;
     for (auto it = start; it != end; ++it)
     {
@@ -285,8 +285,8 @@ vertex* FileParser::createJoinVertex()
     }
 
     // Get pointers to true and false branches of the conditional hierarchy
-    hierarchy* trueHierarchy = condHierarchy->trueHiearchy;
-    hierarchy* falseHierarchy = condHierarchy->falseHiearchy;
+    hierarchy* trueHierarchy = condHierarchy->trueHierarchy;
+    hierarchy* falseHierarchy = condHierarchy->falseHierarchy;
 
     // Create array of inputs for the conditional hierarchy
     vector<edge*> inputs;
