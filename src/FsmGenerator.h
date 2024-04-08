@@ -22,7 +22,7 @@ class FsmGenerator
         int getConditionalEndTime(conditionalHierarchy* condHier);
         int getEndTime();
         void getNextStates(state* currState, int time);
-        state* createState(vector<hierarchy*> hier, int time);
+        state* createNewState(vector<hierarchy*> hier, int time);
         bool upcomingConditionalEnd(hierarchy* hier, int time);
         vector<conditionalHierarchy*> getNewConditionals(state* currState, int time);
         void createStates();
