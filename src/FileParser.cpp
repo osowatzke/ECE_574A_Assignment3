@@ -234,10 +234,14 @@ conditionalHierarchy* FileParser::createNewConditionalHierarchy(edge* condition)
     conditionalHierarchy* condHierarchy = new conditionalHierarchy;
     condHierarchy->parent = currHierarchy;
     condHierarchy->condition = condition;
+
+    // Create true and false hierarchies for either branch of the conditional hierarchy
     condHierarchy->trueHiearchy = new hierarchy;
     condHierarchy->trueHiearchy->parent = condHierarchy;
     condHierarchy->falseHiearchy = new hierarchy;
     condHierarchy->falseHiearchy->parent = condHierarchy;
+
+    // Append conditional hierarchy to array of conditional hierarchies
     currHierarchy->conditional.push_back(condHierarchy);
     return condHierarchy;
 }
@@ -245,7 +249,11 @@ conditionalHierarchy* FileParser::createNewConditionalHierarchy(edge* condition)
 // Function creates a join vertex
 vertex* FileParser::createJoinVertex()
 {
+    // Function should be called from either true or false hierarchy. Corresponding
+    // conditional hierarchy should be the parent of the current hierarchy
     conditionalHierarchy* condHierarchy = currHierarchy->parent;
+
+    // Get the edge names initialized in the true hierarchy
     auto start = condHierarchy->trueHiearchy->edges.begin();
     auto end = condHierarchy->trueHiearchy->edges.end();
     vector<string> edgeNames;
@@ -254,6 +262,8 @@ vertex* FileParser::createJoinVertex()
         string edgeName = it->first;
         edgeNames.push_back(edgeName);
     }
+
+    // Get additional edge names initialized in the false hierarchy
     start = condHierarchy->falseHiearchy->edges.begin();
     end = condHierarchy->falseHiearchy->edges.end();
     vector<string> initialEdgeNames = edgeNames;
@@ -273,62 +283,73 @@ vertex* FileParser::createJoinVertex()
             edgeNames.push_back(edgeName);
         }
     }
+
+    // Get pointers to true and false branches of the conditional hierarchy
     hierarchy* trueHierarchy = condHierarchy->trueHiearchy;
     hierarchy* falseHierarchy = condHierarchy->falseHiearchy;
+
+    // Create array of inputs for the conditional hierarchy
     vector<edge*> inputs;
-    cout << "Inputs: " << endl;
     for (string edgeName : edgeNames)
     {
+        // Get edges from the true hierarchy
         currHierarchy = trueHierarchy;
         edge* inputEdge = getEdge(edgeName);
-        inputs.push_back(inputEdge);        
-        cout << edgeName << " = " << inputEdge << endl;
-        // cout << inputs.size() << endl;
+        inputs.push_back(inputEdge);
+
+        // Get edges from the false hierarchy
         currHierarchy = falseHierarchy;
         inputEdge = getEdge(edgeName);
-        inputs.push_back(inputEdge);        
-        cout << edgeName << " = " << inputEdge << endl;
-        // cout << inputs.size() << endl;
+        inputs.push_back(inputEdge);
     }
+
+    // Set the current hierarchy to the parent hierarchy
     currHierarchy = trueHierarchy->parent->parent;
     vector<edge*> outputs;
-    cout << "Outputs: " << endl;
     for (string edgeName : edgeNames)
     {
-        // cout << "Size Pre: " << currHierarchy->edges.size() << endl;
+        // Create edges for outputs
         edge* outputEdge = getEdge(edgeName);
         if (outputEdge->src != NULL)
         {
             inputs.push_back(outputEdge);
             outputEdge = createNewEdge(edgeName);
         }
-        // cout << "Size Post: " << currHierarchy->edges.size() << endl;
-        cout << edgeName << " = " << outputEdge << endl;
         outputs.push_back(outputEdge);
     }
+
+    // Create join vertex
     return createVertex(VertexType::JOIN, "", inputs, outputs);
 }
 
+// Function returns from a conditional hierarchy
 void FileParser::returnFromHierarchy()
 {
+    // If there is a pending hierarchy update, create a join vertex
     if (hierarchyUpdatePending)
     {
-        vertex* joinVertex = createJoinVertex();
-        cout << "JOIN = " << joinVertex << endl;
-        // cout << "JOIN : IN=" << joinVertex->inputs.size() << " : OUT="  << joinVertex->outputs.size() << endl;
+        createJoinVertex();
     } 
+
+    // Set the hierarchy update pending flag to false.
     hierarchyUpdatePending = false;
 }
 
 // Function gets graph vertices from a line
 void FileParser::getVerticesFromLine(string line)
 {
+    // Use regular expressions to match vertices
     smatch vertexMatch;
     const regex vertexPattern{"^\\s*(\\w+)\\s*=\\s*(\\w+)\\s*(\\S+)?\\s*(\\w+)?\\s*(\\S+)?\\s*(\\w+)?\\s*$"};
     regex_match(line, vertexMatch, vertexPattern);
+
+    // If the line matches the regular expression
     if (!vertexMatch.empty())
     {
+        // Return from conditional hierarchy
         returnFromHierarchy();
+
+        // Get a vector of string for edge names and operators
         vector <string> edgeNames;
         vector <string> operators;
         edgeNames.push_back(vertexMatch.str(1));
@@ -346,9 +367,14 @@ void FileParser::getVerticesFromLine(string line)
                 }
             }
         }
+
+        // If there is only one operator 
         if (operators.size() == 1)
         {
+            // Create string operation that needs to be written to the verilog file
             string operation = edgeNames[0] + " <= " + edgeNames[1] + " " + operators[0] + " " + edgeNames[2];
+
+            // Determine the operation type
             VertexType type;
             if ((operators[0] == "+") ||  (operators[0] == "-"))
             {
@@ -366,99 +392,151 @@ void FileParser::getVerticesFromLine(string line)
             {
                 type = VertexType::DIV;
             }
+
+            // Create vertex
             createVertex(type, operation, {edgeNames[1], edgeNames[2]}, {edgeNames[0]});
         }
+
+        // If there are two operators (ternary operator)
         else if (operators.size() == 2)
         {
+            // Create string operation that needs to be written to the verilog file
             string operation = edgeNames[0] + " <= " + edgeNames[1] + " " + operators[0] + " " + edgeNames[2] + " " + operators[1] + " " + edgeNames[3];
+            
+            // Create vertex
             createVertex(VertexType::LOGIC, operation, {edgeNames[1], edgeNames[2], edgeNames[3]}, {edgeNames[0]});
         }
     }
 }
 
-// Function gets a pointer to an edge and creates one if a pointer does not exist
+// Function gets a pointer to an edge and creates one if the edge does not exist
 edge* FileParser::getEdge(string edgeName)
 {
+    // Get a pointer to the hierarchy that needs to be searched
     hierarchy* searchHierarchy = currHierarchy;
+
+    // Initialize the found edge to a NULL pointer
     edge* edgeFound = NULL;
+
+    // Continue searching until there are no more parent hierarchies to search
     while (searchHierarchy != NULL)
     {
+        // If edge is in current hierarchy
         if (searchHierarchy->edges.find(edgeName) != searchHierarchy->edges.end())
         {
+            // Return edge
             edgeFound = searchHierarchy->edges[edgeName];
             break;
         }
+        
+        // If current hierarchy has no parent, set search hierarchy to NULL
         if (searchHierarchy->parent == NULL)
         {
             searchHierarchy = NULL;
         }
+        // Search through parent hierarchy
         else
         {
             searchHierarchy = searchHierarchy->parent->parent;
         }
     }
+
+    // If no edge is found
     if (edgeFound == NULL)
     {
+
+        // Create new edge
         edgeFound = createNewEdge(edgeName);
+
+        // If there is no net to describe an edge
+        // Append edge to array of missing edges
         if (dataManager->nets.find(edgeName) == dataManager->nets.end())
         {
-             missingEdges[edgeName] = edgeFound;
+             undefinedEdges[edgeName] = edgeFound;
         }
     }
+
+    // Return edge that was found or created
     return edgeFound;
 }
 
 // Function creates a vertex from names of inputs/outputs
 vertex* FileParser::createVertex(VertexType type, string operation, vector<string> inputNames, vector<string> outputNames)
 {
+    // Create an array of input edges
     vector<edge*> inputs;
     for (string& inputName : inputNames)
     {
         edge* inputEdge = getEdge(inputName);
         inputs.push_back(inputEdge);
     }
+
+    // Create an array of output edges
     vector<edge*> outputs;
     for (string& outputName : outputNames)
     {
         edge* output = getEdge(outputName);
+        
+        // If output is already being driven by a source
         if (output->src != NULL)
         {
+            // Make pre-existing output an input. New edge must overwrite old edge
             inputs.push_back(output);
+
+            // Create new output edge
             output = createNewEdge(outputName);
         }
+
+        // Append output edge to array of edges
         outputs.push_back(output);
     }
+
+    // Create new vertex
     return createVertex(type, operation, inputs, outputs);
 }
 
 // Function creates vertex from pointers to input and output edges
 vertex* FileParser::createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs)
 {
+    // Create new vertex
     vertex* newVertex = new vertex;
     newVertex->time = -1;
     newVertex->type = type;
     newVertex->operation = operation;
+
+    // Connect vertex inputs
     for (edge*& input : inputs)
     {
         newVertex->inputs.push_back(input);
         input->dest.push_back(newVertex);        
     }
+
+    // Add vertex conditional input when inside a conditional hierarchy
     if (currHierarchy->parent != NULL)
     {
         newVertex->inputs.push_back(currHierarchy->parent->condition);
         currHierarchy->parent->condition->dest.push_back(newVertex);
     }
+
+    // Connect vertex outputs
     for (edge*& output : outputs)
     {
         newVertex->outputs.push_back(output);
         output->src = newVertex;        
     }
+
+    // Set parent hierarchy of current vertex
     newVertex->parent = currHierarchy;
+
+    // Append vertex to hierarchy and shared array of vertices
     currHierarchy->vertices.push_back(newVertex);
     dataManager->vertices.push_back(newVertex);
+
+    // Return new vertex
     return newVertex;
 }
 
+// Function creates a new edge in the data manager
 edge* FileParser::createNewEdge()
 {
     edge* newEdge = new edge;
@@ -467,7 +545,8 @@ edge* FileParser::createNewEdge()
     return newEdge;
 }
 
-// Function creates a new edge
+// Function creates a new edge in the data manager and
+// adds a key for the edge in the current hierarchy
 edge* FileParser::createNewEdge(string edgeName)
 {
     edge* newEdge = createNewEdge();
@@ -475,27 +554,38 @@ edge* FileParser::createNewEdge(string edgeName)
     return newEdge;
 }
 
+// Function returns a nonzero values if any of the edges were undefined
+// (have no corresponding net)
 int FileParser::checkForUndefinedEdges()
 {
-    if (missingEdges.empty())
+    // If there are undefined edges return 0
+    if (undefinedEdges.empty())
     {
         return 0;
     }
-    auto it = missingEdges.begin();
+
+    // Get the first undefined edge
+    auto it = undefinedEdges.begin();
     string edgeName = it->first;
     edge* missingEdge = it->second;
+
+    // If undefined edge is an input
     if (missingEdge->src == NULL)
     {
         cout << "Undefined input \"" << edgeName << "\"" << endl;
     }
+    // If undefined edge is an output
     else if (missingEdge->dest.size() == 0)
     {
         cout << "Undefined output \"" << edgeName << "\"" << endl;
     }
+    // If undefined edge is a variable
     else
     {
         cout << "Undefined variable \"" << edgeName << "\"" << endl;
     }
+
+    // Return 1 for undefined edge
     return 1;
 }
 

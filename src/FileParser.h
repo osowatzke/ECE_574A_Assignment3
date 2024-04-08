@@ -22,7 +22,7 @@ class FileParser
         DataManager* dataManager;
         vector<string> lines;
         map<string, edge*> activeEdges;
-        map<string, edge*> missingEdges;
+        map<string, edge*> undefinedEdges;
         hierarchy* currHierarchy;
         bool hierarchyUpdatePending;
         int readLines(string filePath);
@@ -38,8 +38,6 @@ class FileParser
         vertex* createVertex(VertexType type, string operation, vector<string>inputEdgeNames, vector<string>outputEdgeNames);
         vertex* createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs);
         conditionalHierarchy* createNewConditionalHierarchy(edge* condition);
-        hierarchy* createTrueHierarchy();
-        hierarchy* createFalseHierarchy();
         void returnFromHierarchy();
         vertex* createJoinVertex();
         void getVerticesFromLine(string line);
