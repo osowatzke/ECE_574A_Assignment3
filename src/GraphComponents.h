@@ -22,6 +22,9 @@ namespace HighLevelSynthesis
 
     struct vertex
     {
+        int asapTime = -1;
+        int alapTime = -1;
+        int mobility = 0;
         int time;
         hierarchy* parent;
         VertexType type;

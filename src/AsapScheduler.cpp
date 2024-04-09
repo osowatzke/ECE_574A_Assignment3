@@ -14,11 +14,11 @@ void AsapScheduler::run()
         unscheduledVertices = false;
         for (vertex*& currVertex : dataManager->vertices)
         {
-            if (currVertex->time == -1)
+            if (currVertex->asapTime == -1)
             {
                 if (predecessorsScheduled(currVertex))
                 {
-                    currVertex->time = getEarliestStartTime(currVertex);
+                    currVertex->asapTime = getEarliestStartTime(currVertex);
                 }
                 else
                 {
@@ -37,7 +37,7 @@ bool AsapScheduler::predecessorsScheduled(vertex* currVertex)
         if (input->src != NULL)
         {
             vertex* src = input->src;
-            if (src->time == -1)
+            if (src->asapTime == -1)
             {
                 return false;
             }

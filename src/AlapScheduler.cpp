@@ -19,11 +19,11 @@ void AlapScheduler::run(int latency)
         unscheduledVertices = false;
         for (vertex*& currVertex : dataManager->vertices)
         {
-            if (currVertex->time == -1)
+            if (currVertex->alapTime == -1)
             {
                 if (successorsScheduled(currVertex))
                 {
-                    currVertex->time = getLatestStartTime(currVertex, latency);
+                    currVertex->alapTime = getLatestStartTime(currVertex, latency);
                 }
                 else
                 {
@@ -41,7 +41,7 @@ bool AlapScheduler::successorsScheduled(vertex* currVertex)
     {
         for(vertex*& dest : output->dest)
         {
-            if (dest->time == -1)
+            if (dest->alapTime == -1)
             {
                 return false;
             }
@@ -58,7 +58,7 @@ int AlapScheduler::getLatestStartTime(vertex* currVertex, int latency)
     {
         for(vertex*& dest : output->dest)
         {
-            startTime = min(startTime, dest->time - runTime);
+            startTime = min(startTime, dest->alapTime - runTime);
         }
     }
     return startTime;
