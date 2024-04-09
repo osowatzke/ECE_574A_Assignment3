@@ -2,7 +2,7 @@
 
 module HLSM_ref(Clk, Rst, Start, Done, a, b, c, d, e, f, g, h, sa, one, two, four, avg);
 
-    parameter LATENCY = 14;
+    parameter LATENCY = 13;
     
     input Clk, Rst, Start;
     output Done;
