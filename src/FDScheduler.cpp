@@ -91,15 +91,12 @@ float FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
 }
 
 void FDScheduler::updateProbabilityMap() {
-    // Get vertex mobility (ALAP - ASAP + 1)
     for (vertex*& currVertex : vertexes)
     {
+        // Get vertex mobility (ALAP - ASAP + 1)
         currVertex->mobility = currVertex->alapTime - currVertex->asapTime + 1;
-    }
 
-    // Compute the operations and type probabilities
-    for (vertex*& currVertex : vertexes)
-    {
+        // Compute the operations and type probabilities
         for (int i = currVertex->asapTime - 1; i < currVertex->alapTime; i++) {
             probabilityMap[currVertex->type][i] += 1 / currVertex->mobility;
         }
