@@ -37,10 +37,10 @@ void FDScheduler::run(int latency)
             float minTotalForce = NULL;
             int minSelfForceTime = 0;
             
-            for (int i = currVertex->asapTime - 1; i < currVertex->alapTime; i++) {
+            for (int i = currVertex->asapTime; i <= currVertex->alapTime; i++) {
                 currSelfForce = getSelfForce(i, currVertex);
-                currSuccessorForce = getSuccessorForces(i + (getVertexRunTime(currVertex) - 1), currVertex);
-                currPredecessorForce = getPredecessorForces(i - (getVertexRunTime(currVertex) - 1), currVertex);
+                currSuccessorForce = getSuccessorForces(i + getVertexRunTime(currVertex), currVertex);
+                currPredecessorForce = getPredecessorForces(i - getVertexRunTime(currVertex), currVertex);
 
                 currtotalForce = currSelfForce + currPredecessorForce + currSuccessorForce;
 
@@ -53,6 +53,9 @@ void FDScheduler::run(int latency)
             currVertex->time = minSelfForceTime;
             currVertex->asapTime = minSelfForceTime;
             currVertex->alapTime = minSelfForceTime;
+
+            updatePredecessorTiming(minSelfForceTime, currVertex);
+            updateSuccessorTiming(minSelfForceTime, currVertex);
         }
     }
 }
@@ -60,9 +63,9 @@ void FDScheduler::run(int latency)
 float FDScheduler::getPredecessorForces(int selfForceTime, vertex* currVertex) {
     float predecessorForce = 0;
     for (edge* currEdge : currVertex->inputs) {
-        if (selfForceTime == currEdge->src->asapTime - 1) {
-            predecessorForce += getSelfForce(selfForceTime - (getVertexRunTime(currVertex) - 1), currEdge->src);
-            predecessorForce += getPredecessorForces(selfForceTime - (getVertexRunTime(currVertex) - 1), currEdge->src);
+        if (selfForceTime == currEdge->src->asapTime) {
+            predecessorForce += getSelfForce(selfForceTime, currEdge->src);
+            predecessorForce += getPredecessorForces(selfForceTime - getVertexRunTime(currEdge->src), currEdge->src);
         }
     }
     return predecessorForce;
@@ -72,9 +75,9 @@ float FDScheduler::getSuccessorForces(int selfForceTime, vertex* currVertex) {
     float successorForce = 0;
     for (edge* currEdge : currVertex->outputs) {
         for (vertex* currSuccessor : currEdge->dest) {
-            if (selfForceTime == currSuccessor->alapTime - 1) {
-                successorForce += getSelfForce(selfForceTime + (getVertexRunTime(currVertex) - 1), currSuccessor);
-                successorForce += getSuccessorForces(selfForceTime + (getVertexRunTime(currVertex) - 1), currSuccessor);
+            if (selfForceTime == currSuccessor->alapTime) {
+                successorForce += getSelfForce(selfForceTime, currSuccessor);
+                successorForce += getSuccessorForces(selfForceTime + getVertexRunTime(currSuccessor), currSuccessor);
             }
         }
     }
@@ -83,7 +86,7 @@ float FDScheduler::getSuccessorForces(int selfForceTime, vertex* currVertex) {
 
 float FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
     float selfForce = 0;
-    for (int j = currVertex->asapTime - 1; j < currVertex->alapTime; j++) {
+    for (int j = currVertex->asapTime; j <= currVertex->alapTime; j++) {
         if (j != usedTime) {
             selfForce += probabilityMap[currVertex->type][usedTime] * (0 - (1 / currVertex->mobility));
         } else {
@@ -101,8 +104,26 @@ void FDScheduler::updateProbabilityMap() {
         currVertex->mobility = currVertex->alapTime - currVertex->asapTime + 1;
 
         // Compute the operations and type probabilities
-        for (int i = currVertex->asapTime - 1; i < currVertex->alapTime; i++) {
+        for (int i = currVertex->asapTime; i <= currVertex->alapTime; i++) {
             probabilityMap[currVertex->type][i] += 1 / currVertex->mobility;
+        }
+    }
+}
+
+void FDScheduler::updatePredecessorTiming(int selfForceTime, vertex* currVertex) {
+    float predecessorForce = 0;
+    for (edge* currEdge : currVertex->inputs) {
+        currEdge->src->alapTime = selfForceTime - getVertexRunTime(currEdge->src);
+        updatePredecessorTiming(selfForceTime - getVertexRunTime(currEdge->src), currEdge->src);
+    }
+}
+
+void FDScheduler::updateSuccessorTiming(int selfForceTime, vertex* currVertex) {
+    float successorForce = 0;
+    for (edge* currEdge : currVertex->outputs) {
+        for (vertex* currSuccessor : currEdge->dest) {
+            currSuccessor->asapTime = selfForceTime;
+            updateSuccessorTiming(selfForceTime + getVertexRunTime(currSuccessor), currSuccessor);
         }
     }
 }

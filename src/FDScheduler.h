@@ -19,6 +19,8 @@ class FDScheduler
         float getSuccessorForces(int selfForceTime, vertex* currVertex);
         float FDScheduler::getSelfForce(int usedTime, vertex* currVertex);
         void FDScheduler::updateProbabilityMap();
+        void FDScheduler::updatePredecessorTiming(int selfForceTime, vertex* currVertex);
+        void FDScheduler::updateSuccessorTiming(int selfForceTime, vertex* currVertex);
 };
 
 } // namespace HighLevelSynthesis
