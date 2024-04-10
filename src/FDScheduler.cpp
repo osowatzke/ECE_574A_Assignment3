@@ -22,24 +22,12 @@ void FDScheduler::run(int latency)
     // Get ALAP vertex times
     ALAP.run(latency);
 
-    // Get vertex mobility (ALAP - ASAP + 1)
-    for (vertex*& currVertex : vertexes)
-    {
-        currVertex->mobility = currVertex->alapTime - currVertex->asapTime + 1;
-    }
-
-    // Compute the operations and type probabilities
-    for (vertex*& currVertex : vertexes)
-    {
-        for (int i = currVertex->asapTime - 1; i < currVertex->alapTime; i++) {
-            probabilityMap[currVertex->type][i] += 1 / currVertex->mobility;
-        }
-    }
-
     // Compute the self-forces, predecessor/successor forces and total forces
     // Schedule the operation with least force and update its time-frame
     for (vertex*& currVertex : vertexes)
     {
+        updateProbabilityMap();
+        
         if (currVertex->time == -1)
         {
             float currSelfForce;
@@ -63,6 +51,8 @@ void FDScheduler::run(int latency)
             }
 
             currVertex->time = minSelfForceTime;
+            currVertex->asapTime = minSelfForceTime;
+            currVertex->alapTime = minSelfForceTime;
         }
     }
 }
@@ -98,6 +88,22 @@ float FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
     }
 
     return selfForce;
+}
+
+void FDScheduler::updateProbabilityMap() {
+    // Get vertex mobility (ALAP - ASAP + 1)
+    for (vertex*& currVertex : vertexes)
+    {
+        currVertex->mobility = currVertex->alapTime - currVertex->asapTime + 1;
+    }
+
+    // Compute the operations and type probabilities
+    for (vertex*& currVertex : vertexes)
+    {
+        for (int i = currVertex->asapTime - 1; i < currVertex->alapTime; i++) {
+            probabilityMap[currVertex->type][i] += 1 / currVertex->mobility;
+        }
+    }
 }
 
 } // namespace HighLevelSynthesis
