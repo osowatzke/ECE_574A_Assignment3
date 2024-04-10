@@ -17,7 +17,7 @@ class FDScheduler
         map<VertexType, map<int, float>> probabilityMap;
         float getPredecessorForces(int selfForceTime, vertex* currVertex);
         float getSuccessorForces(int selfForceTime, vertex* currVertex);
-        float getSelfForce(int usedTime, vertex* currVertex);
+        float FDScheduler::getSelfForce(int usedTime, vertex* currVertex);
         void FDScheduler::updateProbabilityMap();
 };
 

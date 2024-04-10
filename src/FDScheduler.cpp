@@ -60,8 +60,10 @@ void FDScheduler::run(int latency)
 float FDScheduler::getPredecessorForces(int selfForceTime, vertex* currVertex) {
     float predecessorForce = 0;
     for (edge* currEdge : currVertex->inputs) {
-        predecessorForce += getSelfForce(selfForceTime - (getVertexRunTime(currVertex) - 1), currEdge->src);
-        predecessorForce += getPredecessorForces(selfForceTime - (getVertexRunTime(currVertex) - 1), currEdge->src);
+        if (selfForceTime == currEdge->src->asapTime - 1) {
+            predecessorForce += getSelfForce(selfForceTime - (getVertexRunTime(currVertex) - 1), currEdge->src);
+            predecessorForce += getPredecessorForces(selfForceTime - (getVertexRunTime(currVertex) - 1), currEdge->src);
+        }
     }
     return predecessorForce;
 }
@@ -70,8 +72,10 @@ float FDScheduler::getSuccessorForces(int selfForceTime, vertex* currVertex) {
     float successorForce = 0;
     for (edge* currEdge : currVertex->outputs) {
         for (vertex* currSuccessor : currEdge->dest) {
-            successorForce += getSelfForce(selfForceTime + (getVertexRunTime(currVertex) - 1), currSuccessor);
-            successorForce += getSuccessorForces(selfForceTime + (getVertexRunTime(currVertex) - 1), currSuccessor);
+            if (selfForceTime == currSuccessor->alapTime - 1) {
+                successorForce += getSelfForce(selfForceTime + (getVertexRunTime(currVertex) - 1), currSuccessor);
+                successorForce += getSuccessorForces(selfForceTime + (getVertexRunTime(currVertex) - 1), currSuccessor);
+            }
         }
     }
     return successorForce;
@@ -79,8 +83,8 @@ float FDScheduler::getSuccessorForces(int selfForceTime, vertex* currVertex) {
 
 float FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
     float selfForce = 0;
-    for (int j = usedTime; j < currVertex->alapTime; j++) {
-        if (usedTime != j) {
+    for (int j = currVertex->asapTime - 1; j < currVertex->alapTime; j++) {
+        if (j != usedTime) {
             selfForce += probabilityMap[currVertex->type][usedTime] * (0 - (1 / currVertex->mobility));
         } else {
             selfForce += probabilityMap[currVertex->type][usedTime] * (1 - (1 / currVertex->mobility));
