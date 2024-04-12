@@ -15,12 +15,12 @@ module HLSM_tb();
     reg State;
     
     reg Start;
-    reg signed [15:0] a, b, c, d, e;
+    reg signed [15:0] a, b, c, d, e, f, g, h;
     
     wire Done, DoneRef;
-    wire err, DoneErr, iErr;
-    wire signed [15:0] i, iRef;
-  
+    wire err, DoneErr, iErr, jErr, kErr, lErr;
+    wire signed [15:0] i, j, k, l, iRef, jRef, kRef, lRef;
+    
     
     clk_gen #(.CLK_PERIOD(CLK_PERIOD)) clk_gen_i(Clk);
     rst_gen #(.RESET_TIME(RESET_TIME)) rst_gen_i(Rst);
@@ -35,7 +35,13 @@ module HLSM_tb();
         .c(c),
         .d(d),
         .e(e),
-        .i(i));
+        .f(f),
+        .g(g),
+        .h(h),
+        .i(i),
+        .j(j),
+        .k(k),
+        .l(l));
         
     HLSM_ref #(.LATENCY(LATENCY)) HLSM_ref_i(
         .Clk(Clk),
@@ -47,7 +53,13 @@ module HLSM_tb();
         .c(c),
         .d(d),
         .e(e),
-        .i(iRef));
+        .f(f),
+        .g(g),
+        .h(h),
+        .i(iRef),
+        .j(jRef),
+        .k(kRef),
+        .l(lRef));
     
     always @(posedge Clk) begin
         if (Rst == 1) begin
@@ -56,6 +68,9 @@ module HLSM_tb();
             c <= 0;
             d <= 0;
             e <= 0;
+            f <= 0;
+            g <= 0;
+            h <= 0;
             Start <= 0;
             State <= START;
         end
@@ -68,6 +83,9 @@ module HLSM_tb();
                     c <= $random;
                     d <= $random;
                     e <= $random;
+                    f <= $random;
+                    g <= $random;
+                    h <= $random;
                     Start <= 1;
                     State <= WAIT;
                 end
@@ -81,9 +99,11 @@ module HLSM_tb();
     end
     
     error_monitor #(.DATAWIDTH(1))  error_monitor_0(Done, DoneRef, 1'b1, DoneErr, Clk, Rst);
-    error_monitor #(.DATAWIDTH(16))  error_monitor_1(   i, iRef, Done, iErr, Clk, Rst);
- 
+    error_monitor #(.DATAWIDTH(16))  error_monitor_1(   i,    iRef, Done,    iErr, Clk, Rst);
+    error_monitor #(.DATAWIDTH(16))  error_monitor_2(   j,    jRef, Done,    jErr, Clk, Rst);
+    error_monitor #(.DATAWIDTH(16))  error_monitor_3(   k,    kRef, Done,    kErr, Clk, Rst);
+    error_monitor #(.DATAWIDTH(16))  error_monitor_4(   l,    lRef, Done,    lErr, Clk, Rst);
     
-    assign err = DoneErr | iErr ;
+    assign err = DoneErr | iErr| jErr| kErr| lErr ;
     
 endmodule
