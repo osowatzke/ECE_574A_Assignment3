@@ -28,11 +28,15 @@ namespace HighLevelSynthesis
             return retVal;
         }
         #ifdef USE_ALAP_SCHEDULER
-            scheduler.run(latency - 1);
+            retVal = scheduler.run(latency - 1);
         #endif
         #ifndef USE_ALAP_SCHEDULER
             scheduler.run();
         #endif
+        if (retVal)
+        {
+            return retVal;
+        }
         fsmGenerator.run(latency - 1);
         retVal = fileWriter.run(verilogFile);
         return retVal;
