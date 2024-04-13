@@ -14,23 +14,36 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, one, z, x);
     reg signed dLTe, dEQe, dLTEe;
     
     always @(posedge Clk) begin
-        d <= a + b;
-        e <= a + c;
-        f <= a - b; 
-        dEQe <= d == e;
-        dLTe <= d > e;
-        dLTEe <= dEQe + dLTe;
-        
-        if ( dLTEe ) begin
-            if ( dLTe ) begin
-                g <= e + one;
-                h <= f + one;
-            end
-            g <= d + e;
-            h <= f + e;
+        if (Rst == 1) begin
+            d <= 0;
+            e <= 0;
+            f <= 0;
+            g <= 0;
+            h <= 0;
+            dLTe <= 0;
+            dEQe <= 0;
+            dLTEe <= 0;
+            z <= 0;
+            x <= 0;
         end
-        x <= h << one;
-        z <= h >> one;
+        else
+            d <= a + b;
+            e <= a + c;
+            f <= a - b; 
+            dEQe <= d == e;
+            dLTe <= d > e;
+            dLTEe <= dEQe + dLTe;
+            if ( dLTEe ) begin
+                if ( dLTe ) begin
+                    g <= e + one;
+                    h <= f + one;
+                end
+                g <= d + e;
+                h <= f + e;
+            end
+            x <= h << one;
+            z <= h >> one;
+        end
     end
     
     delay_gen #(.DELAY(LATENCY)) delay_i(.qOut(Done), .xIn(Start), .clk(Clk), .rst(Rst));

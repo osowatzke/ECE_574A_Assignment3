@@ -13,15 +13,25 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, z, x);
     reg signed [31:0] d, f, g, zrin;
     
     always @(posedge Clk) begin
-        d <= a + b;
-        g <= a < b;
-        zrin <= a + c;
-        if ( g ) begin
-            zrin <= a + b;
+        if (Rst == 1) begin
+            d <= 0;
+            f <= 0;
+            g <= 0;
+            zrin <= 0;
+            z <= 0;
+            x <= 0;
+        end 
+        else begin
+            d <= a + b;
+            g <= a < b;
+            zrin <= a + c;
+            if ( g ) begin
+                zrin <= a + b;
+            end
+            f <= a * c;
+            x <= f - d; 
+            z <= zrin + f;
         end
-        f <= a * c;
-        x <= f - d; 
-        z <= zrin + f;
     end
     
     delay_gen #(.DELAY(LATENCY)) delay_i(.qOut(Done), .xIn(Start), .clk(Clk), .rst(Rst));

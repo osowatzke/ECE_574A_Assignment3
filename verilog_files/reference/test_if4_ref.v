@@ -14,19 +14,28 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, zero, one, t, z, x);
     reg signed [31:0] e, g, d, f;
     
     always @(posedge Clk) begin
-        d <= a + b;
-
-        if ( t ) begin
-            d <= a - one;
-            f <= a + c;
-            x <= f - d;
+        if (Rst == 1) begin
+            e <= 0;
+            g <= 0;
+            d <= 0;
+            f <= 0;
+            z <= 0;
+            x <= 0;
         end
-        else begin
-            e <= a + c;
-            g <= d > e;
-            z <= g ? d : e;
-            f <= a * c;
-            x <= f - d; 
+        begin
+            d <= a + b;
+            if ( t ) begin
+                d <= a - one;
+                f <= a + c;
+                x <= f - d;
+            end
+            else begin
+                e <= a + c;
+                g <= d > e;
+                z <= g ? d : e;
+                f <= a * c;
+                x <= f - d; 
+            end
         end
     end
     
