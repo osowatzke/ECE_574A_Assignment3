@@ -13,8 +13,11 @@ FsmGenerator::FsmGenerator(DataManager* dataManager)
     : dataManager(dataManager) {}
 
 // Function generates the HLSM
-void FsmGenerator::run()
+void FsmGenerator::run(int inLatency)
 {
+    // Save latency to member variable
+    latency = inLatency;
+
     // Create states in the HLSM
     createStates();
 
@@ -29,7 +32,7 @@ void FsmGenerator::sortStates()
     vector<state*> newStates;
 
     // Loop through all times
-    for (int time = 0; time <= getEndTime(); ++time)
+    for (int time = 0; time < latency; ++time)
     {
         // Loop through all the states
         for (state* currState : dataManager->states)
@@ -121,7 +124,7 @@ void FsmGenerator::getNextStates(state* currState, int time)
             }
         }
         // If the next time is within the HLSM end time
-        if ((time + 1) <= getEndTime())
+        if ((time + 1) < latency)
         {
             // Attempt to find the next state
             state* nextState = findState(newHier, time+1);
@@ -336,21 +339,6 @@ vector<conditionalHierarchy*> FsmGenerator::getNewConditionals(state* currState,
 
     // Return vector of conditional hierarchies
     return newCondHier;
-}
-
-// Function gets the end time of the HLSM
-int FsmGenerator::getEndTime()
-{
-    // Get the maximum end time of all the vertices
-    int endTime = -1;
-    for (vertex* currVertex : dataManager->vertices)
-    {
-        int vertexEndTime = getVertexEndTime(currVertex);
-        endTime = max(endTime, vertexEndTime);
-    }
-
-    // return the end time
-    return endTime;
 }
 
 } // namespace HighLevelSynthesis

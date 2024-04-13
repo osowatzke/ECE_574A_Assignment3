@@ -13,12 +13,12 @@ class FsmGenerator
 {
     public:
         FsmGenerator(DataManager* dataManager);
-        void run();
+        void run(int inLatency);
     private:
         DataManager* dataManager;
+        int latency;
         void createStates();
         void sortStates();
-        int getEndTime();
         void getNextStates(state* currState, int time);
         state* createNewState(vector<hierarchy*> hier, int time);
         state* findState(vector<hierarchy*> hier, int time);
