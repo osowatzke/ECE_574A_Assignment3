@@ -9,88 +9,90 @@ namespace HighLevelSynthesis
 
 FDScheduler::FDScheduler(DataManager* dataManager)
     : dataManager(dataManager)
-    , probabilityMap() {}
+    , probabilityMap()
+    , ASAP(AsapScheduler(dataManager))
+    , ALAP(AlapScheduler(dataManager)) {}
 
-void FDScheduler::run(int latency)
+void FDScheduler::run(int inlatency)
 {
-    AsapScheduler ASAP = AsapScheduler(dataManager);
-    AlapScheduler ALAP = AlapScheduler(dataManager);
-
-    // Get ASAP vertex times
-    ASAP.run();
-
-    // Get ALAP vertex times
-    ALAP.run(latency);
+    latency = inlatency;
 
     // Compute the self-forces, predecessor/successor forces and total forces
     // Schedule the operation with least force and update its time-frame
-    for (vertex*& currVertex : vertexes)
+    for (vertex*& currVertex : dataManager->vertices)
     {
+        updateTiming();
+        
         updateProbabilityMap();
         
         if (currVertex->time == -1)
         {
-            float currSelfForce;
-            float currPredecessorForce;
-            float currSuccessorForce;
             float currtotalForce;
-            float minTotalForce = NULL;
+            float minTotalForce = numeric_limits<float>::max();
             int minSelfForceTime = -1;
             
             for (int i = currVertex->asapTime; i <= currVertex->alapTime; i++) {
-                currSelfForce = getSelfForce(i, currVertex);
-                currSuccessorForce = getSuccessorForces(i + getVertexRunTime(currVertex), currVertex);
-                currPredecessorForce = getPredecessorForces(i - getVertexRunTime(currVertex), currVertex);
+                currtotalForce = getTotalForce(i, currVertex);
 
-                currtotalForce = currSelfForce + currPredecessorForce + currSuccessorForce;
-
-                if ((minTotalForce == NULL) || (minTotalForce > currtotalForce)) {
+                if (minTotalForce > currtotalForce) {
                     minTotalForce = currtotalForce;
                     minSelfForceTime = i;
                 }
             }
 
             currVertex->time = minSelfForceTime;
-            currVertex->asapTime = minSelfForceTime;
-            currVertex->alapTime = minSelfForceTime;
-
-            updatePredecessorTiming(minSelfForceTime, currVertex);
-            updateSuccessorTiming(minSelfForceTime, currVertex);
         }
     }
 }
 
-float FDScheduler::getPredecessorForces(int selfForceTime, vertex* currVertex) {
-    float predecessorForce = 0;
-    for (edge* currEdge : currVertex->inputs) {
-        if (selfForceTime == currEdge->src->asapTime) {
-            predecessorForce += getSelfForce(selfForceTime, currEdge->src);
-            predecessorForce += getPredecessorForces(selfForceTime - getVertexRunTime(currEdge->src), currEdge->src);
+float FDScheduler::getTotalForce(int selfForceTime, vertex* currVertex) {
+    int vertexStartTime = currVertex->asapTime;
+    int vertexEndTime = currVertex->alapTime;
+    float totalForce = 0;
+    
+    for (vertex* tempVertex : dataManager->vertices) {
+        if (tempVertex->time == -1) {
+            tempVertex->asapTestTime = tempVertex->asapTime;
+            tempVertex->alapTestTime = tempVertex->alapTime;
         }
     }
-    return predecessorForce;
-}
 
-float FDScheduler::getSuccessorForces(int selfForceTime, vertex* currVertex) {
-    float successorForce = 0;
-    for (edge* currEdge : currVertex->outputs) {
-        for (vertex* currSuccessor : currEdge->dest) {
-            if (selfForceTime == currSuccessor->alapTime) {
-                successorForce += getSelfForce(selfForceTime, currSuccessor);
-                successorForce += getSuccessorForces(selfForceTime + getVertexRunTime(currVertex), currSuccessor);
-            }
+    currVertex->time = selfForceTime;
+    updateTiming();
+    
+    for (vertex* tempVertex : dataManager->vertices) {
+        if (tempVertex->time == -1) {
+            int tempASAPTime = tempVertex->asapTestTime;
+            int tempALAPTime = tempVertex->alapTestTime;
+            tempVertex->asapTestTime = tempVertex->asapTime;
+            tempVertex->alapTestTime = tempVertex->alapTime;
+            tempVertex->asapTime = tempASAPTime;
+            tempVertex->alapTime = tempALAPTime;
+        }
+
+        for (int i = tempVertex->asapTestTime; i < tempVertex->alapTestTime; i++) {
+            totalForce += getSelfForce(i, tempVertex);
         }
     }
-    return successorForce;
+
+    currVertex->asapTime = vertexStartTime;
+    currVertex->alapTime = vertexEndTime;
+
+    return totalForce;
 }
 
 float FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
     float selfForce = 0;
-    for (int j = currVertex->asapTime; j <= currVertex->alapTime; j++) {
-        if (j != usedTime) {
-            selfForce += probabilityMap[currVertex->type][usedTime] * (0 - (1 / currVertex->mobility));
+    float keyAtTime = 0;
+    for (int i = currVertex->asapTime; i <= currVertex->alapTime; i++) {
+        if (i != usedTime) {
+            keyAtTime = 0;
         } else {
-            selfForce += probabilityMap[currVertex->type][usedTime] * (1 - (1 / currVertex->mobility));
+            keyAtTime = 1;
+        }
+
+        for (int j = 0; j < getVertexRunTime(currVertex); j++) {
+            selfForce += probabilityMap[currVertex->type][usedTime] * (keyAtTime - (1.0f / currVertex->mobility));
         }
     }
 
@@ -98,34 +100,32 @@ float FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
 }
 
 void FDScheduler::updateProbabilityMap() {
-    for (vertex*& currVertex : vertexes)
+    for (vertex*& currVertex : dataManager->vertices)
     {
         // Get vertex mobility (ALAP - ASAP + 1)
         currVertex->mobility = currVertex->alapTime - currVertex->asapTime + 1;
 
         // Compute the operations and type probabilities
         for (int i = currVertex->asapTime; i <= currVertex->alapTime; i++) {
-            probabilityMap[currVertex->type][i] += 1 / currVertex->mobility;
+            for (int j = 0; j < getVertexRunTime(currVertex); j++) {
+                probabilityMap[currVertex->type][i + j] += 1.0f / currVertex->mobility;
+            }
         }
     }
 }
 
-void FDScheduler::updatePredecessorTiming(int selfForceTime, vertex* currVertex) {
+void FDScheduler::updateTiming() {
     float predecessorForce = 0;
-    for (edge* currEdge : currVertex->inputs) {
-        currEdge->src->alapTime = selfForceTime - getVertexRunTime(currEdge->src);
-        updatePredecessorTiming(selfForceTime - getVertexRunTime(currEdge->src), currEdge->src);
+    for (vertex* currVertex : dataManager->vertices) {
+        currVertex->alapTime = currVertex->time;
+        currVertex->asapTime = currVertex->time;
     }
-}
 
-void FDScheduler::updateSuccessorTiming(int selfForceTime, vertex* currVertex) {
-    float successorForce = 0;
-    for (edge* currEdge : currVertex->outputs) {
-        for (vertex* currSuccessor : currEdge->dest) {
-            currSuccessor->asapTime = selfForceTime;
-            updateSuccessorTiming(selfForceTime + getVertexRunTime(currVertex), currSuccessor);
-        }
-    }
+    // Get ASAP vertex times
+    ASAP.run();
+
+    // Get ALAP vertex times
+    ALAP.run(latency);
 }
 
 } // namespace HighLevelSynthesis

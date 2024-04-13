@@ -24,6 +24,8 @@ namespace HighLevelSynthesis
     {
         int asapTime = -1;
         int alapTime = -1;
+        int asapTestTime = -1;
+        int alapTestTime = -1;
         int mobility = 0;
         int time;
         hierarchy* parent;

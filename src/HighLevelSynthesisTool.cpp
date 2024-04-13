@@ -10,12 +10,15 @@ namespace HighLevelSynthesis
     HighLevelSynthesisTool::HighLevelSynthesisTool()
         : dataManager(DataManager())
         , fileParser(FileParser(&dataManager))
+        /*
         #ifdef USE_ALAP_SCHEDULER
         , scheduler(AlapScheduler(&dataManager))
         #endif
         #ifndef USE_ALAP_SCHEDULER
         , scheduler(AsapScheduler(&dataManager))
         #endif
+        */
+        , scheduler(FDScheduler(&dataManager))
         , fsmGenerator(FsmGenerator(&dataManager))
         , fileWriter(FileWriter(&dataManager)) {}
 
@@ -27,12 +30,15 @@ namespace HighLevelSynthesis
         {
             return retVal;
         }
+        /*
         #ifdef USE_ALAP_SCHEDULER
             scheduler.run(latency - 1);
         #endif
         #ifndef USE_ALAP_SCHEDULER
             scheduler.run();
         #endif
+        */
+        scheduler.run(latency - 1);
         fsmGenerator.run();
         retVal = fileWriter.run(verilogFile);
         return retVal;

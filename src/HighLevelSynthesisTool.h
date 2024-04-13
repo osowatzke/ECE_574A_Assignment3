@@ -7,6 +7,7 @@
 #include "FileParser.h"
 #include "FileWriter.h"
 #include "FsmGenerator.h"
+#include "FDScheduler.h"
 
 #include <string>
 
@@ -32,12 +33,15 @@ class HighLevelSynthesisTool
     private:
         DataManager dataManager;
         FileParser fileParser;
+        /*
         #ifdef USE_ALAP_SCHEDULER
             AlapScheduler scheduler;
         #endif
         #ifndef USE_ALAP_SCHEDULER
             AsapScheduler scheduler;
         #endif
+        */
+        FDScheduler scheduler;
         FsmGenerator fsmGenerator;
         FileWriter fileWriter;
 };
