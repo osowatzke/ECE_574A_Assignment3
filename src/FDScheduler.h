@@ -12,7 +12,7 @@ class FDScheduler
 {
     public:
         FDScheduler(DataManager* dataManager);
-        void run(int Latency);
+        int run(int Latency);
     private:
         DataManager* dataManager;
         map<VertexType, map<int, float>> probabilityMap;
@@ -22,7 +22,7 @@ class FDScheduler
         float getTotalForce(int selfForceTime, vertex* currVertex);
         float getSelfForce(int usedTime, vertex* currVertex);
         void updateProbabilityMap();
-        void updateTiming();
+        int updateTiming();
 };
 
 } // namespace HighLevelSynthesis

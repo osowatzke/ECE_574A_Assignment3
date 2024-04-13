@@ -13,7 +13,7 @@ FDScheduler::FDScheduler(DataManager* dataManager)
     , ASAP(AsapScheduler(dataManager))
     , ALAP(AlapScheduler(dataManager)) {}
 
-void FDScheduler::run(int inlatency)
+int FDScheduler::run(int inlatency)
 {
     latency = inlatency;
 
@@ -21,7 +21,9 @@ void FDScheduler::run(int inlatency)
     // Schedule the operation with least force and update its time-frame
     for (vertex*& currVertex : dataManager->vertices)
     {
-        updateTiming();
+        if (updateTiming() == 1) {
+            return 1;
+        }
         
         updateProbabilityMap();
         
@@ -43,6 +45,8 @@ void FDScheduler::run(int inlatency)
             currVertex->time = minSelfForceTime;
         }
     }
+
+    return 0;
 }
 
 float FDScheduler::getTotalForce(int selfForceTime, vertex* currVertex) {
@@ -70,7 +74,7 @@ float FDScheduler::getTotalForce(int selfForceTime, vertex* currVertex) {
             tempVertex->alapTime = tempALAPTime;
         }
 
-        for (int i = tempVertex->asapTestTime; i < tempVertex->alapTestTime; i++) {
+        for (int i = tempVertex->asapTestTime; i <= tempVertex->alapTestTime; i++) {
             totalForce += getSelfForce(i, tempVertex);
         }
     }
@@ -114,7 +118,7 @@ void FDScheduler::updateProbabilityMap() {
     }
 }
 
-void FDScheduler::updateTiming() {
+int FDScheduler::updateTiming() {
     float predecessorForce = 0;
     for (vertex* currVertex : dataManager->vertices) {
         currVertex->alapTime = currVertex->time;
@@ -125,7 +129,7 @@ void FDScheduler::updateTiming() {
     ASAP.run();
 
     // Get ALAP vertex times
-    ALAP.run(latency);
+    return ALAP.run(latency);
 }
 
 } // namespace HighLevelSynthesis

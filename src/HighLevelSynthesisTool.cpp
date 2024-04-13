@@ -38,7 +38,11 @@ namespace HighLevelSynthesis
             scheduler.run();
         #endif
         */
-        scheduler.run(latency - 1);
+        retVal = scheduler.run(latency - 1);
+        if (retVal)
+        {
+            return retVal;
+        }
         fsmGenerator.run();
         retVal = fileWriter.run(verilogFile);
         return retVal;

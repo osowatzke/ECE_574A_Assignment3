@@ -20,9 +20,7 @@ module HLSM(Clk, Rst, Start, Done, a, b, c, x, z);
                State0_0 = 1,
                State1_0 = 2,
                State2_0 = 3,
-               State3_0 = 4,
-               State4_0 = 5,
-               Final = 6;
+               Final = 4;
 
     reg [2:0] State;
 
@@ -46,22 +44,16 @@ module HLSM(Clk, Rst, Start, Done, a, b, c, x, z);
                     end
                 end
                 State0_0 : begin
-                    State <= State1_0;
-                end
-                State1_0 : begin
-                    State <= State2_0;
-                end
-                State2_0 : begin
                     d <= a + b;
                     e <= a + c;
                     f <= a * c;
-                    State <= State3_0;
+                    State <= State1_0;
                 end
-                State3_0 : begin
+                State1_0 : begin
                     g <= d > e;
-                    State <= State4_0;
+                    State <= State2_0;
                 end
-                State4_0 : begin
+                State2_0 : begin
                     z <= g ? d : e;
                     x <= f - d;
                     State <= Final;
