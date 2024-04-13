@@ -33,7 +33,7 @@ namespace HighLevelSynthesis
         #ifndef USE_ALAP_SCHEDULER
             scheduler.run();
         #endif
-        fsmGenerator.run();
+        fsmGenerator.run(latency - 1);
         retVal = fileWriter.run(verilogFile);
         return retVal;
     }
