@@ -25,19 +25,18 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, d, e, f, g, h, sa, one, two, fou
         csa2 <= sa > two;
         csa3 <= sa > four;
 
-        if ( csa1 ) {
-        t7div2 <= t7 >> one;
-   
-        if ( csa2 ) {
-        t7div4 <= t7div2 >> one;
-        }
-        else {
-        t7div4 <= t7 >> one;
-        if ( csa3 ) {
-        avg <= t7div4 >> one;
-        }
-        }
-        }
+        if ( csa1 ) begin
+            t7div2 <= t7 >> one;
+            if ( csa2 ) begin
+                t7div4 <= t7div2 >> one;
+            end
+            else begin
+                t7div4 <= t7 >> one;
+                if ( csa3 ) begin
+                    avg <= t7div4 >> one;
+                end
+            end
+        end
     end
     
     delay_gen #(.DELAY(LATENCY)) delay_i(.qOut(Done), .xIn(Start), .clk(Clk), .rst(Rst));

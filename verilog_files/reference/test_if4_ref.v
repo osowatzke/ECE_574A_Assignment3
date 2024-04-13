@@ -16,19 +16,18 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, zero, one, t, z, x);
     always @(posedge Clk) begin
         d <= a + b;
 
-        if ( t ) {
-        d <= a - one;
-        f <= a + c;
-        x <= f - d;
-        }
-        else {
-	    e <= a + c;
-	    g <= d > e;
-	    z <= g ? d : e;
-	    f <= a * c;
-	    x <= f - d; 
-        }
-
+        if ( t ) begin
+            d <= a - one;
+            f <= a + c;
+            x <= f - d;
+        end
+        else begin
+            e <= a + c;
+            g <= d > e;
+            z <= g ? d : e;
+            f <= a * c;
+            x <= f - d; 
+        end
     end
     
     delay_gen #(.DELAY(LATENCY)) delay_i(.qOut(Done), .xIn(Start), .clk(Clk), .rst(Rst));

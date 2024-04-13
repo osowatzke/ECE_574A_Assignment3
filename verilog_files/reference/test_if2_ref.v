@@ -20,14 +20,15 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, one, z, x);
         dEQe <= d == e;
         dLTe <= d > e;
         dLTEe <= dEQe + dLTe;
-        if ( dLTEe ) {
-	    if ( dLTe ) {
-		g <= e + one;
-		h <= f + one;
-	    }
-	    g <= d + e;
-	    h <= f + e;
-        }
+        
+        if ( dLTEe ) begin
+            if ( dLTe ) begin
+                g <= e + one;
+                h <= f + one;
+            end
+            g <= d + e;
+            h <= f + e;
+        end
         x <= h << one;
         z <= h >> one;
     end

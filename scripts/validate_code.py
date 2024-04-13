@@ -61,7 +61,7 @@ class validationSuite:
         os.chdir(self.init_path)
         
     def load_tests(self):
-        csv_path = os.path.join(self.class_path, 'validation_tests.csv')
+        csv_path = os.path.join(self.class_path, 'validation_tests2.csv')
         df = pandas.read_csv(csv_path)
         test_names = df['Test Name']
         latencies = df['Latency']
@@ -108,8 +108,8 @@ class validationSuite:
             return
         os.chdir(self.project_dir)
         print(os.getcwd())
-        print(f'vivado.exe -mode tcl -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}')
-        r = subprocess.run(f'vivado -mode tcl -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}', shell=True)
+        print(f'vivado -mode batch -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}')
+        r = subprocess.run(f'vivado -mode batch -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}', shell=True)
         if r.returncode == 0:
             self.status.append("Passed")
         elif r.returncode == 1:
@@ -125,7 +125,7 @@ class validationSuite:
         print()
         
     def run(self):
-        #self.compile_code()
+        # self.compile_code()
         self.create_new_autogen_dir()
         self.load_tests()
         self.run_tests()
