@@ -68,4 +68,6 @@ Then, run the following command from the terminal:
 
 `python .\scripts\validate_code.py`
 
+The output of the validation script should appear as follows:
+
 ![Validation Script Outputs](./images/test_results.png)
