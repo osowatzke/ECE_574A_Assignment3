@@ -67,3 +67,5 @@ To run the automation script, navigate to the repo root directory.
 Then, run the following command from the terminal:
 
 `python .\scripts\validate_code.py`
+
+![Validation Script Outputs](./images/test_results.png)
