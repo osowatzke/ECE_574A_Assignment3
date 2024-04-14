@@ -75,9 +75,9 @@ module HLSM_tb();
                     b <= $random;
                     c <= $random;
                     d <= $random;
-                    e <= $random;
+                    e <= $random % 256;
                     f <= $random;
-                    g <= $random;
+                    g <= $random % 256;
                     Start <= 1;
                     State <= WAIT;
                 end
