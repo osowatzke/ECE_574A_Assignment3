@@ -1,2 +1,18 @@
 Test Name,Latency,Error Level
 standard_tests/hls_test1.c,4,0
+standard_tests/hls_test2.c,6,0
+standard_tests/hls_test3.c,11,0
+standard_tests/hls_test4.c,8,0
+standard_tests/hls_test5.c,11,0
+standard_tests/hls_test6.c,35,0
+standard_tests/hls_test7.c,7,0
+latency_tests/hls_lat_test1.c,5,0
+latency_tests/hls_lat_test2.c,9,0
+latency_tests/hls_lat_test3.c,3,0
+latency_tests/hls_lat_test4.c,5,0
+latency_tests/hls_lat_test5.c,6,0
+latency_tests/hls_lat_test6.c,7,0
+if_tests/test_if1.c,5,0
+if_tests/test_if2.c,9,0
+if_tests/test_if3.c,10,0
+if_tests/test_if4.c,5,0
