@@ -12,25 +12,56 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, z, x);
     
     reg signed [31:0] d, f, g, zrin;
     
+    localparam State0   = 0,
+               State1   = 1,
+               State2_0 = 2,
+               State2_1 = 3,
+               State3   = 4;
+            
+    reg [2:0] State;
+    
     always @(posedge Clk) begin
-        if (Rst == 1) begin
+        if ( Rst ) begin
             d <= 0;
             f <= 0;
             g <= 0;
             zrin <= 0;
             z <= 0;
             x <= 0;
-        end 
+            State <= State0;
+        end
         else begin
-            d <= a + b;
-            g <= a < b;
-            zrin <= a + c;
-            if ( g ) begin
-                zrin <= a + b;
-            end
-            f <= a * c;
-            x <= f - d; 
-            z <= zrin + f;
+            case ( State )
+                State0 : begin
+                    d <= a + b;
+                    g <= a < b;
+                    f <= a * c;
+                    if ( Start ) begin
+                        State <= State1;
+                    end
+                end
+                State1 : begin
+                    x <= f - d; 
+                    if ( g ) begin
+                        State <= State2_0;
+                    end
+                    else begin
+                        State <= State2_1;
+                    end
+                end
+                State2_0 : begin
+                    zrin <= a + b;
+                    State <= State3;
+                end
+                State2_1 : begin
+                    zrin <= a + c;
+                    State <= State3;
+                end
+                State3 : begin
+                    z <= zrin + f;
+                    State <= State0;
+                end
+            endcase;
         end
     end
     

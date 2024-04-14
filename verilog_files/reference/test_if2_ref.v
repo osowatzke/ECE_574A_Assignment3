@@ -13,6 +13,16 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, one, z, x);
     reg signed [31:0] d, e, f, g, h;
     reg signed dLTe, dEQe, dLTEe;
     
+    localparam State0 = 0,
+               State1 = 1,
+               State2 = 2,
+               State3 = 3,
+               State4_0 = 4,
+               State4_1 = 5,
+               State5 = 6;
+               
+    reg [2:0] State;
+    
     always @(posedge Clk) begin
         if (Rst == 1) begin
             d <= 0;
@@ -25,24 +35,49 @@ module HLSM_ref(Clk, Rst, Start, Done, a, b, c, one, z, x);
             dLTEe <= 0;
             z <= 0;
             x <= 0;
+            State <= State0;
         end
-        else
-            d <= a + b;
-            e <= a + c;
-            f <= a - b; 
-            dEQe <= d == e;
-            dLTe <= d > e;
-            dLTEe <= dEQe + dLTe;
-            if ( dLTEe ) begin
-                if ( dLTe ) begin
-                    g <= e + one;
-                    h <= f + one;
+        else begin
+            case (State)
+                State0 : begin
+                    d <= a + b;
+                    e <= a + c;
+                    f <= a - b;
+                    if (Start == 1) begin
+                        State <= State1;
+                    end
                 end
-                g <= d + e;
-                h <= f + e;
-            end
-            x <= h << one;
-            z <= h >> one;
+                State1 : begin
+                    dEQe <= d == e;
+                    dLTe <= d > e;
+                    State <= State2;
+                end
+                State2 : begin
+                    dLTEe <= dEQe + dLTe;
+                    State <= State3;
+                end
+                State3 : begin
+                    if (dLTEe) begin
+                        State <= State4_0;
+                    end
+                    else begin
+                        State <= State4_1;
+                    end
+                end
+                State4_0 : begin
+                    g <= d + e;
+                    h <= f + e;
+                    State <= State5;
+                end
+                State4_1 : begin
+                    State <= State5;
+                end
+                State5 : begin
+                    x <= h << one;
+                    z <= h >> one;
+                    State <= State0;
+                end
+            endcase
         end
     end
     
