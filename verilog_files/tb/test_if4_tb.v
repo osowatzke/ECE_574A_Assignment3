@@ -51,7 +51,7 @@ module HLSM_tb();
         .zero(zero),
         .one(one),
         .t(t),
-        .z(zRef)
+        .z(zRef),
         .x(xRef)); 
     
     always @(posedge Clk) begin

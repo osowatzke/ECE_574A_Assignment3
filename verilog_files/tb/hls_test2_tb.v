@@ -60,8 +60,8 @@ module HLSM_tb();
             case (State)
                 START : begin
                     a <= $random;
-                    b <= $random;
-                    c <= $random;
+                    b <= $random % 2;
+                    c <= $random % 2;
                     Start <= 1;
                     State <= WAIT;
                 end

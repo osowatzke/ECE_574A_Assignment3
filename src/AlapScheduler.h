@@ -10,7 +10,7 @@ class AlapScheduler
 {
     public:
         AlapScheduler(DataManager* dataManager);
-        void run(int Latency);
+        int run(int Latency);
     private:
         DataManager* dataManager;
         bool successorsScheduled(vertex* currVertex);

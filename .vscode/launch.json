@@ -9,8 +9,8 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/src/hlsyn.exe",
-            "args": ["${workspaceFolder}/testfiles/if_tests/test_if3.c", "16", "test_if3.v"],
-            "cwd": "${workspaceFolder}"
+            "args": ["../testfiles/standard_tests/hls_test1.c", "16", "../verilog_files/autogen/hls_test1.v"],
+            "cwd": "${workspaceFolder}/build"
         }
     ]
 }

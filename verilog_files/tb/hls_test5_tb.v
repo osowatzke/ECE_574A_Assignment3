@@ -83,7 +83,7 @@ module HLSM_tb();
                     f <= $random;
                     g <= $random;
                     h <= $random;
-                    sa <= $random;
+                    sa <= $urandom_range(0,7);
                     Start <= 1;
                     State <= WAIT;
                 end

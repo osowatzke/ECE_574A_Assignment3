@@ -11,7 +11,7 @@ namespace HighLevelSynthesis
 AlapScheduler::AlapScheduler(DataManager* dataManager)
     : dataManager(dataManager) {}
 
-void AlapScheduler::run(int latency)
+int AlapScheduler::run(int latency)
 {
     bool unscheduledVertices = true;
     while (unscheduledVertices)
@@ -24,6 +24,11 @@ void AlapScheduler::run(int latency)
                 if (successorsScheduled(currVertex))
                 {
                     currVertex->time = getLatestStartTime(currVertex, latency);
+                    if (currVertex->time < 0)
+                    {
+                        cout << "ERROR : Latency constraint too short" << endl;
+                        return 1;
+                    }
                 }
                 else
                 {
@@ -33,6 +38,7 @@ void AlapScheduler::run(int latency)
             }
         }
     }
+    return 0;
 }
 
 bool AlapScheduler::successorsScheduled(vertex* currVertex)

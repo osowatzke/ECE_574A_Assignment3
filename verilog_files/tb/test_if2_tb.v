@@ -63,9 +63,9 @@ module HLSM_tb();
             case (State)
                 START : begin
                     a <= $random;
-                    b <= $random;
-                    c <= $random;
-                    one <= $random;
+                    b <= $random % 2;
+                    c <= $random % 2;
+                    one <= $urandom_range(0,7);
                     Start <= 1;
                     State <= WAIT;
                 end
