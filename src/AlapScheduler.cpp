@@ -19,14 +19,14 @@ int AlapScheduler::run(int latency)
         unscheduledVertices = false;
         for (vertex*& currVertex : dataManager->vertices)
         {
-            if (currVertex->time == -1)
+            if (currVertex->alapTime == -1)
             {
                 if (successorsScheduled(currVertex))
                 {
-                    currVertex->time = getLatestStartTime(currVertex, latency);
-                    if (currVertex->time < 0)
-                    {
-                        cout << "ERROR : Latency constraint too short" << endl;
+                    currVertex->alapTime = getLatestStartTime(currVertex, latency);
+
+                    if (currVertex->alapTime < 0) {
+                        cout << "Error: Latency constraint too short." << endl;
                         return 1;
                     }
                 }
@@ -38,6 +38,7 @@ int AlapScheduler::run(int latency)
             }
         }
     }
+
     return 0;
 }
 
@@ -47,7 +48,7 @@ bool AlapScheduler::successorsScheduled(vertex* currVertex)
     {
         for(vertex*& dest : output->dest)
         {
-            if (dest->time == -1)
+            if (dest->alapTime == -1)
             {
                 return false;
             }
@@ -64,7 +65,7 @@ int AlapScheduler::getLatestStartTime(vertex* currVertex, int latency)
     {
         for(vertex*& dest : output->dest)
         {
-            startTime = min(startTime, dest->time - runTime);
+            startTime = min(startTime, dest->alapTime - runTime);
         }
     }
     return startTime;

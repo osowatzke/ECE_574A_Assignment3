@@ -4,6 +4,7 @@ set(SOURCES
     DataManager.cpp
     FileParser.cpp
     FileWriter.cpp
+    FDScheduler.cpp
     FsmGenerator.cpp
     HighLevelSynthesisTool.cpp)
 
@@ -14,6 +15,7 @@ set(HEADER_FILES
     DataManager.h
     FileParser.h
     FileWriter.h
+    FDScheduler.h
     FsmGenerator.h
     GraphComponents.h
     HighLevelSynthesisTool.h)
