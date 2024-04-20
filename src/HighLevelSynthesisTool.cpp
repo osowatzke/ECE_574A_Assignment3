@@ -30,7 +30,7 @@ namespace HighLevelSynthesis
         {
             return retVal;
         }
-        /*
+        
         #ifdef USE_ALAP_SCHEDULER
             retVal = scheduler.run(latency - 1);
         #endif

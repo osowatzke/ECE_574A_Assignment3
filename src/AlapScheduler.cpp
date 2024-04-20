@@ -12,7 +12,6 @@ AlapScheduler::AlapScheduler(DataManager* dataManager)
     : dataManager(dataManager) {}
 
 int AlapScheduler::run(int latency)
-int AlapScheduler::run(int latency)
 {
     bool unscheduledVertices = true;
     while (unscheduledVertices)
