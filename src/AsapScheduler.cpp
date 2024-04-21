@@ -12,7 +12,7 @@ void AsapScheduler::run()
     // Assume there are unscheduled vertices
     bool unscheduledVertices = true;
 
-    // Continue looping until there are non unscheduled vertices
+    // Continue looping until there are no unscheduled vertices
     while (unscheduledVertices)
     {
         // Assume no unscheduled vertices until one is found
@@ -21,7 +21,6 @@ void AsapScheduler::run()
         // Loop through all vertices
         for (vertex*& currVertex : dataManager->vertices)
         {
-
             // If vertex is unscheduled
             if (currVertex->asapTime == -1)
             {
@@ -42,7 +41,7 @@ void AsapScheduler::run()
     }
 }
 
-// Function determines whether a vertices predecessors have been scheduled
+// Function determines whether a vertex's predecessors have been scheduled
 bool AsapScheduler::predecessorsScheduled(vertex* currVertex)
 {
     // Loop through all of the vertices inputs
@@ -59,7 +58,6 @@ bool AsapScheduler::predecessorsScheduled(vertex* currVertex)
             }
         }
     }
-    // If all parent vertices are scheduled
     return true;
 }
 
