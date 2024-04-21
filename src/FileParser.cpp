@@ -30,6 +30,9 @@ int FileParser::run(string filePath)
     // Read nets (inputs, outputs, registers, and wires in output file)
     readNets();
 
+    // Create initial graph edges
+    createInitialEdges();
+
     // Get graph vertices
     getVertices();
 
@@ -149,6 +152,24 @@ net* FileParser::createNewNet(string netName, NetType type, int width, bool isSi
     return newNet;
 }
 
+// Function creates initial set of graph edges
+void FileParser::createInitialEdges()
+{
+    // Set initial hierarchy
+    currHierarchy = dataManager->graphHierarchy;
+
+    // Create edge for each input
+    auto start = dataManager->nets.begin();
+    auto end = dataManager->nets.end();
+    for (auto it = start; it != end; ++it)
+    {
+        if (it->second->type == NetType::INPUT)
+        {
+            createNewEdge(it->first);
+        }
+    }
+}
+
 // Function gets graph vertices
 void FileParser::getVertices()
 {
@@ -182,7 +203,7 @@ void FileParser::parseConditionalStatements(string line)
 
         // Create a fork vertex
         string inputName = ifMatch.str(1);
-        string operation = "if (" + inputName + " == 1)";
+        string operation = "if ( " + inputName + " )";
         edge* input = getEdge(inputName);
         edge* output = createNewEdge();
         createVertex(VertexType::FORK, operation, {input}, {output});

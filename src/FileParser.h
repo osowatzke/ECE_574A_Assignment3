@@ -30,6 +30,7 @@ class FileParser
         void readNets();
         void readNetsFromLine(string line);
         net* createNewNet(string netName, NetType type, int width, bool isSigned);
+        void createInitialEdges();
         void getVertices();
         void parseConditionalStatements(string line);
         edge* getEdge(string edgeName);

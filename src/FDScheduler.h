@@ -8,6 +8,9 @@
 namespace HighLevelSynthesis
 {
 
+// Uncomment to debug FDS
+// #define DEBUG_FDS
+
 class FDScheduler
 {
     public:
@@ -15,14 +18,16 @@ class FDScheduler
         int run(int Latency);
     private:
         DataManager* dataManager;
-        map<VertexType, map<int, float>> probabilityMap;
+        map<VertexType, vector<double>> typeDistribution;
         int latency;
         AsapScheduler ASAP;
         AlapScheduler ALAP;
-        float getTotalForce(int selfForceTime, vertex* currVertex);
-        float getSelfForce(int usedTime, vertex* currVertex);
-        void updateProbabilityMap();
         int updateTiming();
+        void updateTypeDistribution();
+        void displayTypeDistribution();
+        map<VertexType, vector<double>> getTypeDistribution(hierarchy* currHierarchy);
+        double getTotalForce(int selfForceTime, vertex* currVertex);
+        double getSelfForce(int usedTime, vertex* currVertex);
 };
 
 } // namespace HighLevelSynthesis
