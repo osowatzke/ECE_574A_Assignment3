@@ -24,7 +24,7 @@ class FDScheduler
         void displayTypeDistribution();
         map<VertexType, vector<double>> getTypeDistribution(hierarchy* currHierarchy);
         double getTotalForce(int selfForceTime, vertex* currVertex);
-        double getSelfForce(int usedTime, vertex* currVertex);
+        double getSelfForce(vertex* currVertex);
 };
 
 } // namespace HighLevelSynthesis

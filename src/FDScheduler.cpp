@@ -34,7 +34,7 @@ int FDScheduler::run(int inlatency)
         
         // Update the type distributions
         updateTypeDistribution();
-        // displayTypeDistribution();
+        displayTypeDistribution();
         
         // Schedule all nodes except FORK or JOIN nodes
         if (currVertex->type != VertexType::FORK && currVertex->type != VertexType::JOIN)
@@ -121,9 +121,9 @@ double FDScheduler::getTotalForce(int selfForceTime, vertex* currVertex) {
         tempVertex->alapTime = tempALAPTime;
 
         // Compute the self force, predecessor force, and successor force
-        for (int i = tempVertex->asapTestTime; i <= tempVertex->alapTestTime; i++) {
-            totalForce += getSelfForce(i, tempVertex);
-        }
+        // for (int i = tempVertex->asapTestTime; i <= tempVertex->alapTestTime; i++) {
+        totalForce += getSelfForce(tempVertex);
+        // }
     }
     cout << "Total Force: " << totalForce << endl << endl;
 
@@ -135,7 +135,7 @@ double FDScheduler::getTotalForce(int selfForceTime, vertex* currVertex) {
 }
 
 // Function computes the self force of a given node
-double FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
+double FDScheduler::getSelfForce(vertex* currVertex) {
 
     // Reset the self force
     double selfForce = 0.0;
@@ -154,17 +154,30 @@ double FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
         int endTime = currVertex->alapTime + runTime - 1;
 
         // Loop over all times during which the node could run
-        for (int time = startTime; time <= endTime; ++time) {
-
-            // Determine if node is running at time
-            if (usedTime <= time && time <= (usedTime + runTime - 1)) {
-                keyAtTime = 1.0;
-            } else {
-                keyAtTime = 0.0;
+        vector<double> initialProbability (latency, 0.0);
+        for (int i = currVertex->asapTime; i <= currVertex->alapTime; ++i)
+        {
+            for (int j = 0; j < getVertexRunTime(currVertex); ++j)
+            {
+                //cout << currVertex->mobility << endl;
+                initialProbability[i + j] += 1.0 / currVertex->mobility;
             }
+        }
 
-            // Compute the forces for each timestep
-            selfForce += typeDistribution[currVertex->type][time] * (keyAtTime - (1.0 / currVertex->mobility));
+        vector<double> newProbability (latency, 0.0);
+        int newMobility = currVertex->alapTestTime - currVertex->asapTestTime + 1;
+        for (int i = currVertex->asapTestTime; i <= currVertex->alapTestTime; ++i)
+        {
+            for (int j = 0; j < getVertexRunTime(currVertex); ++j)
+            {
+                //cout << newMobility << endl;
+                newProbability[i + j] += 1.0 / newMobility;
+            }
+        }
+
+        for (int time = 0; time < latency; ++time)
+        {
+            selfForce += typeDistribution[currVertex->type][time] * (newProbability[time] - initialProbability[time]);
         }
     }
     return selfForce;
