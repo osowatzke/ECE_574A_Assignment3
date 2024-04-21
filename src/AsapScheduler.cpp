@@ -54,7 +54,8 @@ int AsapScheduler::getEarliestStartTime(vertex* currVertex)
         if (input->src != NULL)
         {
             vertex* src = input->src;
-            int vertexEndTime = getVertexEndTime(src);
+            int runTime = getVertexRunTime(src);
+            int vertexEndTime = src->asapTime + runTime - 1;
             startTime = max(startTime, vertexEndTime + 1);
         }
     }
