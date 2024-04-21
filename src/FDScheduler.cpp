@@ -34,7 +34,10 @@ int FDScheduler::run(int inlatency)
         
         // Update the type distributions
         updateTypeDistribution();
-        // displayTypeDistribution();
+        
+        #ifdef DEBUG_FDS
+        displayTypeDistribution();
+        #endif
         
         // Schedule all nodes except FORK or JOIN nodes
         if (currVertex->type != VertexType::FORK && currVertex->type != VertexType::JOIN)
@@ -44,6 +47,10 @@ int FDScheduler::run(int inlatency)
             double minTotalForce = numeric_limits<double>::max();
             int minSelfForceTime = -1;
             
+            #ifdef DEBUG_FDS
+            cout << "Debug placement of node (" << currVertex->operation << ")" << endl << endl;
+            #endif
+
             // Loop over all times in which the node could be scheduled
             for (int i = currVertex->asapTime; i <= currVertex->alapTime; i++) {
 
@@ -59,6 +66,10 @@ int FDScheduler::run(int inlatency)
 
             // Schedule the vertex at the time with the minimum total force
             currVertex->time = minSelfForceTime;
+
+            #ifdef DEBUG_FDS
+            cout << "Place node at time " << currVertex->time << endl << endl;
+            #endif
         }
     }
 
@@ -125,7 +136,11 @@ double FDScheduler::getTotalForce(int selfForceTime, vertex* currVertex) {
             totalForce += getSelfForce(i, tempVertex);
         }
     }
-    cout << "Total Force: " << totalForce << endl << endl;
+
+    #ifdef DEBUG_FDS
+    cout << "Assume Node is Placed at Time " << selfForceTime << endl;
+    cout << "=> Total Force: " << totalForce << endl << endl;
+    #endif
 
     // Restore the ASAP and ALAP times for the current node
     currVertex->asapTime = vertexAsapTime;
@@ -143,28 +158,31 @@ double FDScheduler::getSelfForce(int usedTime, vertex* currVertex) {
     // Do not consider FORK or JOIN nodes
     if (currVertex->type != VertexType::FORK && currVertex->type != VertexType::JOIN)
     {
-        // Flag specifies whether node is running at time
-        double keyAtTime = 0.0;
+        // Determine the initial probabilities that a node is scheduled at each timestep
+        vector<double> initialProbability(latency, 0.0);
+        for (int i = currVertex->asapTime; i <= currVertex->alapTime; ++i)
+        {
+            for (int j = 0; j < getVertexRunTime(currVertex); ++j)
+            {
+                initialProbability[i + j] += 1.0/currVertex->mobility;
+            }
+        }
 
-        // Determines the times during which the node could run
-        // End time is ALAP time + run time - 1
-        // Accounts for multi-cycle operations
-        int runTime = getVertexRunTime(currVertex);
-        int startTime = currVertex->asapTime;
-        int endTime = currVertex->alapTime + runTime - 1;
+        // Loop over all possible times
+        for (int time = 0; time < latency; ++time)
+        {
+            // Determine the probability that node is placed at time
+            double probabilityAtTime = 0.0;
 
-        // Loop over all times during which the node could run
-        for (int time = startTime; time <= endTime; ++time) {
-
-            // Determine if node is running at time
-            if (usedTime <= time && time <= (usedTime + runTime - 1)) {
-                keyAtTime = 1.0;
-            } else {
-                keyAtTime = 0.0;
+            // Update the probability that the node is placed at given time
+            int runTime = getVertexRunTime(currVertex);
+            if (usedTime <= time && time <= (usedTime + runTime - 1))
+            {
+                probabilityAtTime = 1.0;
             }
 
-            // Compute the forces for each timestep
-            selfForce += typeDistribution[currVertex->type][time] * (keyAtTime - (1.0 / currVertex->mobility));
+            // Determine the self force given the node placement
+            selfForce += typeDistribution[currVertex->type][time] * (probabilityAtTime - initialProbability[time]);
         }
     }
     return selfForce;
@@ -236,22 +254,43 @@ void FDScheduler::updateTypeDistribution()
     typeDistribution = getTypeDistribution(dataManager->graphHierarchy);
 }
 
+// Function prints type distributions
 void FDScheduler::displayTypeDistribution()
 {
+    // Define names of vertex types
     vector <string> typeNames = {"ADD","MUL","DIV","LOGIC"};
+
+    // Define vertex types
     vector <VertexType> types = {VertexType::ADD, VertexType::MUL, VertexType::DIV, VertexType::LOGIC};
+
+    // Index into array of types
     int typeIdx = 0;
+
+    // Print header for type distribution
+    cout << "Type Distribution:" << endl << endl;
+
+    // Loop over all type names
     for (string typeName : typeNames)
     {
+        // Get vertex type
         VertexType type = types[typeIdx];
+
+        // Print name of vertex type
         cout << setw(5) << typeName;
+
+        // Loop over all times and print type distributions
         for (int time = 0; time < latency; ++time)
         {
             cout << setw(8) << setprecision(2) << typeDistribution[type][time];
         }
+
+        // Print newline
         cout << endl;
+
+        // Increment type index
         typeIdx++;
     }
+    // Print newline
     cout << endl;
 }
 

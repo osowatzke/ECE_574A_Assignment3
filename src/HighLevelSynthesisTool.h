@@ -13,12 +13,6 @@
 
 #define DEBUG_GRAPH
 
-#if (defined(_WIN32) || defined(__CYGWIN__))
-#define PATH_SEPARATOR "\\"
-#else
-#define PATH_SEPARATOR "/"
-#endif
-
 using namespace std;
 
 namespace HighLevelSynthesis

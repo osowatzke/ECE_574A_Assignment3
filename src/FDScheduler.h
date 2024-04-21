@@ -8,6 +8,9 @@
 namespace HighLevelSynthesis
 {
 
+// Uncomment to debug FDS
+// #define DEBUG_FDS
+
 class FDScheduler
 {
     public:
