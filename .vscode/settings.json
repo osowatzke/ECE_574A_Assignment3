@@ -25,6 +25,12 @@
         "iosfwd": "cpp",
         "xlocale": "cpp",
         "bitset": "cpp",
-        "list": "cpp"
+        "list": "cpp",
+        "queue": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "xlocinfo": "cpp",
+        "xtree": "cpp",
+        "xutility": "cpp"
     }
 }

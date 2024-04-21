@@ -5,6 +5,7 @@ set(SOURCES
     FileParser.cpp
     FileWriter.cpp
     FsmGenerator.cpp
+    GraphSimplifier.cpp
     HighLevelSynthesisTool.cpp)
 
 set(HEADER_FILES
@@ -16,6 +17,7 @@ set(HEADER_FILES
     FileWriter.h
     FsmGenerator.h
     GraphComponents.h
+    GraphSimplifier.h
     HighLevelSynthesisTool.h)
 
 add_executable(hlsyn ${SOURCES} ${HEADER_FILES})

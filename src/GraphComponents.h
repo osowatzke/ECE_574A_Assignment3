@@ -1,6 +1,8 @@
 #ifndef GUARD_GraphComponents_h
 #define GUARD_GraphComponents_h
 
+#include "CircuitComponents.h"
+
 #include <map>
 #include <vector>
 
@@ -9,11 +11,15 @@ using namespace std;
 namespace HighLevelSynthesis
 {
     struct vertex;
+    struct hierarchy;
 
     struct edge
     {
+        NetType type;
+        hierarchy* parent;
         vertex* src;
         vector<vertex*> dest;
+        vector<bool> isImplicit;
     };
 
     enum VertexType{DIV, ADD, MUL, LOGIC, FORK, JOIN};
@@ -28,6 +34,7 @@ namespace HighLevelSynthesis
         string operation; // Operation that will be implemented in HLSM
         vector <edge*> inputs; 
         vector <edge*> outputs;
+        vector<vector<edge*>> dependencies;
     };
 
     struct conditionalHierarchy;

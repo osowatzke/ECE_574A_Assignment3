@@ -31,12 +31,13 @@ class FileParser
         void readNetsFromLine(string line);
         net* createNewNet(string netName, NetType type, int width, bool isSigned);
         void getVertices();
+        void createInitialEdges();
         void parseConditionalStatements(string line);
         edge* getEdge(string edgeName);
         edge* createNewEdge();
         edge* createNewEdge(string edgeName);
-        vertex* createVertex(VertexType type, string operation, vector<string>inputEdgeNames, vector<string>outputEdgeNames);
-        vertex* createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs);
+        vertex* createVertex(VertexType type, string operation, vector<string>inputEdgeNames, vector<string>outputEdgeNames, vector<vector<string>> dependencies);
+        vertex* createVertex(VertexType type, string operation, vector<edge*> inputs, vector<edge*> outputs, vector<vector<edge*>> dependencies, vector<bool> isImplicit);
         conditionalHierarchy* createNewConditionalHierarchy(edge* condition);
         void returnFromHierarchy();
         vertex* createJoinVertex();

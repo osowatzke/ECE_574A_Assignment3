@@ -10,6 +10,7 @@ namespace HighLevelSynthesis
     HighLevelSynthesisTool::HighLevelSynthesisTool()
         : dataManager(DataManager())
         , fileParser(FileParser(&dataManager))
+        , graphSimplifier(GraphSimplifier(&dataManager))
         #ifdef USE_ALAP_SCHEDULER
         , scheduler(AlapScheduler(&dataManager))
         #endif
@@ -27,6 +28,7 @@ namespace HighLevelSynthesis
         {
             return retVal;
         }
+        graphSimplifier.run();
         #ifdef USE_ALAP_SCHEDULER
             retVal = scheduler.run(latency - 1);
         #endif

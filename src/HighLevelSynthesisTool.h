@@ -7,6 +7,7 @@
 #include "FileParser.h"
 #include "FileWriter.h"
 #include "FsmGenerator.h"
+#include "GraphSimplifier.h"
 
 #include <string>
 
@@ -38,6 +39,7 @@ class HighLevelSynthesisTool
         #ifndef USE_ALAP_SCHEDULER
             AsapScheduler scheduler;
         #endif
+        GraphSimplifier graphSimplifier;
         FsmGenerator fsmGenerator;
         FileWriter fileWriter;
 };
