@@ -16,6 +16,8 @@ if_tests/test_if1.c,5,0
 if_tests/test_if2.c,9,0
 if_tests/test_if3.c,10,0
 if_tests/test_if4.c,5,0
-error_tests/error1.c,16,1,Undefined input "c"
-error_tests/error2.c,16,1,Undefined output "x"
-error_tests/error3.c,16,1,Undefined variable "g"
+error_tests/error1.c,16,1,ERROR: Undefined Input "c"
+error_tests/error2.c,16,1,ERROR: Undefined Output "x"
+error_tests/error3.c,16,1,ERROR: Undefined Variable "g"
+error_tests/empty_file.c,4,1,ERROR: Empty File Provided
+if_tests/test_if2.c,4,1,ERROR: Latency Constraint too Short

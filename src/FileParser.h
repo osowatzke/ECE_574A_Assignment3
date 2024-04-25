@@ -43,6 +43,7 @@ class FileParser
         vertex* createJoinVertex();
         void getVerticesFromLine(string line);
         int checkForUndefinedEdges();
+        int validateGraph();
 };
 
 } // namespace HighLevelSynthesis

@@ -36,6 +36,15 @@ int FileParser::run(string filePath)
     // Get graph vertices
     getVertices();
 
+    // Determine if the graph is valid
+    retVal = validateGraph();
+
+    // Return if graph is invalid
+    if (retVal)
+    {
+        return retVal;
+    }
+
     // Determine if any edges were not defined by a net
     retVal = checkForUndefinedEdges();    
     return retVal;
@@ -590,21 +599,35 @@ int FileParser::checkForUndefinedEdges()
     // If undefined edge is an input
     if (missingEdge->src == NULL)
     {
-        cout << "Undefined input \"" << edgeName << "\"" << endl;
+        cout << "ERROR: Undefined Input \"" << edgeName << "\"" << endl;
     }
     // If undefined edge is an output
     else if (missingEdge->dest.size() == 0)
     {
-        cout << "Undefined output \"" << edgeName << "\"" << endl;
+        cout << "ERROR: Undefined Output \"" << edgeName << "\"" << endl;
     }
     // If undefined edge is a variable
     else
     {
-        cout << "Undefined variable \"" << edgeName << "\"" << endl;
+        cout << "ERROR: Undefined Variable \"" << edgeName << "\"" << endl;
     }
 
     // Return 1 for undefined edge
     return 1;
+}
+
+// Function validates whether graph is valid
+int FileParser::validateGraph()
+{
+    // If graph is empty, issue an error message and return a non-zero value
+    if ((dataManager->edges.size() == 0) && (dataManager->vertices.size() == 0))
+    {
+        cout << "ERROR: Empty File Provided" << endl;
+        return 1;
+    }
+
+    // Return 0 for valid circuit
+    return 0;
 }
 
 } // namespace HighLevelSynthesis
