@@ -249,7 +249,44 @@ class validationSuite:
                 status = f'{Fore.RED}{status}{Style.RESET_ALL}'
             print(f'{test_name:20s} | {self.latencies[idx]:7d} | {status}')
         print()
+        if self.skip_vivado:
+            print(f'{Fore.YELLOW}Warning: No vivado validation performed. ' \
+                f'Copy to machine with vivado and rerun with --vivado-only flag{Style.RESET_ALL}')
+         
+    def get_git_hash(self):
+        return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
+
+    def is_git_repo_dirty(self):
+        cmd_output = subprocess.check_output(['git', 'diff', '--stat']).decode('ascii').strip()
+        if cmd_output == '':
+            return False
+        else:
+            return True
+            
+    def log_git_hash(self):
+        git_hash = self.get_git_hash()
+        is_git_repo_dirty = self.is_git_repo_dirty()
+        git_log = os.path.join(self.regression_dir,'git.log')
+        with open(git_log,'w') as f:
+            f.write(f'{git_hash}\n')
+            if is_git_repo_dirty:
+                f.write('git repo contains uncommitted changes')
         
+    def check_git_hash(self):
+        git_hash = self.get_git_hash()
+        is_git_repo_dirty = self.is_git_repo_dirty()
+        git_log = os.path.join(self.regression_dir,'git.log')
+        with open(git_log, 'r') as f:
+            lines = f.readlines()
+            hash_match = False
+            if (git_hash == lines[0]):
+                hash_match = True
+                print(f'{Fore.YELLOW}Warning: Mismatch in git hash ' \
+                    f'between local and remote machine{Style.RESET_ALL}')
+            if (is_git_repo_dirty or len(lines) > 1):
+                print(f'{Fore.YELLOW}Warning: Either local or remote ' \
+                    f'machine contain uncommitted changes{Style.RESET_ALL}')
+                    
     def run(self):
         self.load_tests()
         if not self.vivado_only:
@@ -259,9 +296,12 @@ class validationSuite:
         else:
             self.validate_regression_file()        
         self.run_tests()
-        if not self.vivado_only:
-            self.save_regression_output()
         self.print_results()
+        if self.vivado_only:
+            self.check_git_hash()
+        else:
+            self.save_regression_output()
+            self.log_git_hash()
         
 if __name__=="__main__":
 
