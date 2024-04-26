@@ -1,7 +1,7 @@
 
 import argparse
 from colorama import Fore, Style, init
-from enum import Enum
+from enum import IntEnum
 import psutil
 import os
 import pandas
@@ -15,7 +15,13 @@ if psutil.Process(os.getpid()).parent().name() == 'cmd.exe':
 def is_windows():
     return os.name == 'nt'
 
-class RunStatus(Enum):
+def lists_are_equal(x, y):
+    is_equal = False
+    if len(x) == len(y):
+        is_equal = all([xi == yi for (xi, yi) in zip(x, y)])
+    return is_equal
+    
+class RunStatus(IntEnum):
     NO_ERROR        = 0
     BAD_ERROR_LEVEL = 1
     BAD_ERROR_MSG   = 2
@@ -31,6 +37,7 @@ class validationSuite:
         self.project_dir = os.path.abspath(os.path.join(self.class_path,'..'))
         self.build_dir = os.path.join(self.project_dir,'build')
         self.autogen_dir = os.path.join(self.project_dir,'verilog_files','autogen')
+        self.regression_dir = os.path.join(self.project_dir,'regression')
         self.mingw_path = self.get_mingw_path()
         self.skip_vivado = skip_vivado
         self.vivado_only = vivado_only
@@ -40,7 +47,8 @@ class validationSuite:
         self.error_levels = None
         self.error_messages = None
         self.test_names = None
-        self.status = None        
+        self.status = None
+        self.regression_status = None     
         
     def get_mingw_path(self):
         if is_windows():
@@ -129,31 +137,77 @@ class validationSuite:
         except:
             self.throw_error("Could not remove autogen directory")
         
-    def run_tests(self):
+    def create_new_regression_dir(self):
+        try:
+            if os.path.exists(self.regression_dir):
+                shutil.rmtree(self.regression_dir)
+            os.mkdir(self.regression_dir)
+        except:
+            self.throw_error("Could not remove regression directory")
+    
+    def validate_regression_file(self):
+        regression_file = os.path.join(self.regression_dir, 'regression.csv')
+        try:
+            df = pandas.read_csv(regression_file)
+        except:
+            self.throw_error("Could not find regression directory")
+        test_names = df['Test Name']
+        latencies = df['Latency']
+        self.regression_status = df['Error Level']
+        test_names_are_equal = lists_are_equal(test_names, self.test_names)
+        latencies_are_equal = lists_are_equal(latencies, self.latencies)
+        if not test_names_are_equal or not latencies_are_equal:
+            self.throw_error("Invalid regression file")
+            
+    def save_regression_output(self):
+        regression_file = os.path.join(self.regression_dir, 'regression.csv')
+        with open(regression_file, 'a') as f:
+            f.write('Test Name,Latency,Error Level\n');
+            for idx in range(len(self.test_names)):
+                f.write(f'{self.test_names[idx]},{self.latencies[idx]},{int(self.status[idx])}\n')
+            
+    def run_tests(self):      
         self.status = []
         for idx in range(len(self.test_names)):
             self.run_test(idx)
             
     def run_test(self, idx):
-        os.chdir(self.build_dir)
-        if is_windows():
-            shell=False
-        else:
-            shell=True
-        r = subprocess.run(f'./src/hlsyn.exe {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}', shell=shell, capture_output=True)
-        if r.returncode != self.error_levels[idx]:
-            self.status.append(RunStatus.BAD_ERROR_LEVEL)
-            return
-        elif r.returncode != 0:
-            cmd_output = r.stdout.decode().rstrip()
-            if (cmd_output == self.error_messages[idx]):
-                self.status.append(RunStatus.NO_ERROR)
+        regression_dir = os.path.join(self.regression_dir,str(idx))
+        if self.vivado_only:
+            if self.regression_status[idx]:
+                self.status.append(self.regression_status[idx])
+                return
+            src_file = os.path.join(regression_dir, f'{self.test_names[idx]}.v')
+            dest_file = self.out_files[idx]
+            if os.path.exists(src_file):
+                shutil.copyfile(src_file, dest_file)
             else:
-                self.status.append(RunStatus.BAD_ERROR_MSG)
-            return
-        if not os.path.exists(self.out_files[idx]):
-            self.status.append(RunStatus.SEG_FAULT)
-            return
+                self.status.append(self.regression_status[idx])
+                return
+        else:
+            os.chdir(self.build_dir)
+            if is_windows():
+                shell=False
+            else:
+                shell=True
+            r = subprocess.run(f'./src/hlsyn.exe {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}', shell=shell, capture_output=True)
+            if r.returncode != self.error_levels[idx]:
+                self.status.append(RunStatus.BAD_ERROR_LEVEL)
+                return
+            elif r.returncode != 0:
+                cmd_output = r.stdout.decode().rstrip()
+                if (cmd_output == self.error_messages[idx]):
+                    self.status.append(RunStatus.NO_ERROR)
+                else:
+                    self.status.append(RunStatus.BAD_ERROR_MSG)
+                return
+            if not os.path.exists(self.out_files[idx]):
+                self.status.append(RunStatus.SEG_FAULT)
+                return
+            os.mkdir(regression_dir)
+            src_file = self.out_files[idx]
+            dest_file = os.path.join(regression_dir, f'{self.test_names[idx]}.v')
+            shutil.copy(src_file, dest_file)
         if self.skip_vivado:
             self.status.append(RunStatus.NO_ERROR)
         else:
@@ -165,7 +219,7 @@ class validationSuite:
                 self.status.append(RunStatus.NO_COMPILE)
             else:
                 self.status.append(RunStatus.BAD_BEHAV)
-
+        
     def get_status_printout(self, status):
         if status == RunStatus.NO_ERROR:
             return "Passed"
@@ -197,11 +251,16 @@ class validationSuite:
         print()
         
     def run(self):
+        self.load_tests()
         if not self.vivado_only:
             self.compile_code()
             self.create_new_autogen_dir()
-        self.load_tests()
+            self.create_new_regression_dir()
+        else:
+            self.validate_regression_file()        
         self.run_tests()
+        if not self.vivado_only:
+            self.save_regression_output()
         self.print_results()
         
 if __name__=="__main__":
