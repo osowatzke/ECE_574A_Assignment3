@@ -16,6 +16,7 @@ class validationSuite:
         self.latencies = None
         self.out_files = None
         self.error_levels = None
+        self.error_messages = None
         self.test_names = None
         self.status = None
         
@@ -66,12 +67,14 @@ class validationSuite:
         test_names = df['Test Name']
         latencies = df['Latency']
         error_levels = df['Error Level']
+        error_messages = df['Error Message']
         self.in_files = []
         self.latencies = []
         self.out_files = []
         self.error_levels = []
         self.test_names = []
-        for (test_name, latency, error_level) in zip(test_names, latencies, error_levels):
+        self.error_messages = []
+        for (test_name, latency, error_level, error_message) in zip(test_names, latencies, error_levels, error_messages):
             in_file = f'{self.project_dir}/testfiles/{test_name}'
             test_name = os.path.splitext(os.path.basename(test_name))[0]
             out_file = f'{self.project_dir}/verilog_files/autogen/{test_name}.v'
@@ -80,6 +83,7 @@ class validationSuite:
             self.out_files.append(out_file)
             self.latencies.append(latency)
             self.error_levels.append(error_level)
+            self.error_messages.append(error_message)
             
     def create_new_autogen_dir(self):
         try:
@@ -96,12 +100,16 @@ class validationSuite:
             
     def run_test(self, idx):
         os.chdir(self.build_dir)
-        r = subprocess.run(f'./src/hlsyn.exe {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}')
+        r = subprocess.run(f'./src/hlsyn.exe {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}', capture_output=True)
         if r.returncode != self.error_levels[idx]:
             self.status.append("Error: Incorrect ErrorLevel")
             return
         elif r.returncode != 0:
-            self.status.append("Passed")
+            cmd_output = r.stdout.decode().rstrip()
+            if (cmd_output == self.error_messages[idx]):
+                self.status.append("Passed")
+            else:
+                self.status.append("Error: Incorrect ErrorMessage")
             return
         if not os.path.exists(self.out_files[idx]):
             self.status.append("Error: Segmentation Fault")
@@ -118,10 +126,12 @@ class validationSuite:
             self.status.append("Error: Behavioral Simulation Failed")
             
     def print_results(self):
-        print('\nTEST RESULTS:')
+        print('\nTEST RESULTS:\n')
+        print('%-20s | %-7s | %s' % ('Test Name', 'Latency', 'Result'))
+        print('%s' % ('-' * 60))
         for idx in range(len(self.test_names)):
             test_name = self.test_names[idx] + ".c"
-            print(f'{test_name:20s}: {self.status[idx]}')
+            print(f'{test_name:20s} | {self.latencies[idx]:7d} | {self.status[idx]}')
         print()
         
     def run(self):

@@ -38,7 +38,7 @@ int AlapScheduler::run(int latency)
                     // Print an error message and return a non-zero value
                     // if vertex cannot be scheduled
                     if (currVertex->alapTime < 0) {
-                        cout << "Error: Latency constraint too short." << endl;
+                        cout << "ERROR: Latency Constraint too Short" << endl;
                         return 1;
                     }
                 }
