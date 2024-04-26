@@ -276,7 +276,6 @@ class validationSuite:
         
     def check_git_hash(self):
         git_hash = self.get_git_hash()
-        print(git_hash)
         is_git_repo_dirty = self.is_git_repo_dirty()
         git_log = os.path.join(self.regression_dir,'git.log')
         with open(git_log, 'r') as f:
