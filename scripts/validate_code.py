@@ -172,8 +172,8 @@ class validationSuite:
         print()
         
     def run(self):
-        #self.compile_code()
-        #self.create_new_autogen_dir()
+        self.compile_code()
+        self.create_new_autogen_dir()
         self.load_tests()
         self.run_tests()
         self.print_results()
