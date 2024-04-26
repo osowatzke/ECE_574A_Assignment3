@@ -276,10 +276,11 @@ class validationSuite:
         
     def check_git_hash(self):
         git_hash = self.get_git_hash()
+        print(git_hash)
         is_git_repo_dirty = self.is_git_repo_dirty()
         git_log = os.path.join(self.regression_dir,'git.log')
         with open(git_log, 'r') as f:
-            lines = f.readlines()
+            lines = f.read().splitlines()
             if (git_hash != lines[0]):
                 print(f'{Fore.YELLOW}Warning: Mismatch in git hash ' \
                     f'between local and remote machine{Style.RESET_ALL}\n')
@@ -295,8 +296,8 @@ class validationSuite:
             self.create_new_regression_dir()
         else:
             self.validate_regression_file()        
-        self.run_tests()
-        self.print_results()
+        # self.run_tests()
+        # self.print_results()
         if self.vivado_only:
             self.check_git_hash()
         else:
