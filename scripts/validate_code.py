@@ -1,11 +1,16 @@
 
 import argparse
+from colorama import Fore, Style, init
+import psutil
 import os
 import pandas
 import shutil
 import subprocess
 import sys
  
+if psutil.Process(os.getpid()).parent().name() == 'cmd.exe':
+    init(convert=True)
+
 def is_windows():
     return os.name == 'nt'
 
@@ -159,12 +164,16 @@ class validationSuite:
         print('%s' % ('-' * 60))
         for idx in range(len(self.test_names)):
             test_name = self.test_names[idx] + ".c"
-            print(f'{test_name:20s} | {self.latencies[idx]:7d} | {self.status[idx]}')
+            if self.status[idx] == "Passed":
+                status = f'{Fore.GREEN}{self.status[idx]}{Style.RESET_ALL}'
+            else:
+                status = f'{Fore.RED}{self.status[idx]}{Style.RESET_ALL}'
+            print(f'{test_name:20s} | {self.latencies[idx]:7d} | {status}')
         print()
         
     def run(self):
-        self.compile_code()
-        self.create_new_autogen_dir()
+        #self.compile_code()
+        #self.create_new_autogen_dir()
         self.load_tests()
         self.run_tests()
         self.print_results()
