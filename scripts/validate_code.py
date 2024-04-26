@@ -4,6 +4,9 @@ import sys
 import subprocess
 import shutil
  
+def is_windows():
+    return os.name == 'nt':
+
 class validationSuite:
     def __init__(self):
         self.init_path = os.getcwd()
@@ -20,9 +23,17 @@ class validationSuite:
         self.test_names = None
         self.status = None
         
+    def is_windows(self):
+        return os.name == 'nt'
         
     def get_mingw_path(self):
-        r = subprocess.run('where gcc', capture_output=True)
+        if is_windows():
+            cmd = 'where gcc'
+            shell = False
+        else:
+            cmd = 'which gcc'
+            shell = True
+        r = subprocess.run(cmd, shell=shell, capture_output=True)
         if r.returncode:
             self.throw_error("Could not find gcc installation")
         gcc_path = r.stdout.decode().rstrip()
@@ -42,12 +53,17 @@ class validationSuite:
             self.throw_error("Could not remove build directory")
             
     def configure_cmake(self):
-        r = subprocess.run('cmake --no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE ' + \
-            f'-DCMAKE_C_COMPILER:FILEPATH={self.mingw_path}\\gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH={self.mingw_path}\\g++.exe -S{self.project_dir} ' + \
-            f'-B{self.build_dir} -G "MinGW Makefiles"')
-        if r.returncode:
-            self.throw_error("Failed to configure cmake")
-        r = subprocess.run('cmake ..')
+        if is_windows():
+            r = subprocess.run('cmake --no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE ' + \
+                f'-DCMAKE_C_COMPILER:FILEPATH={self.mingw_path}\\gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH={self.mingw_path}\\g++.exe -S{self.project_dir} ' + \
+                f'-B{self.build_dir} -G "MinGW Makefiles"')
+            if r.returncode:
+                self.throw_error("Failed to configure cmake")
+        if is_windows():
+            shell = False
+        else
+            shell = True
+        r = subprocess.run('cmake ..', shell=shell)
         if r.returncode:
             self.throw_error("Failed to configure cmake")
         
@@ -56,7 +72,11 @@ class validationSuite:
         os.mkdir(self.build_dir)
         os.chdir(self.build_dir)
         self.configure_cmake()
-        r = subprocess.run('cmake --build .')
+        if is_windows():
+            shell = False
+        else
+            shell = True
+        r = subprocess.run('cmake --build .', shell=shell)
         if r.returncode:
             self.throw_error("Failed to compile code")
         os.chdir(self.init_path)
@@ -100,7 +120,11 @@ class validationSuite:
             
     def run_test(self, idx):
         os.chdir(self.build_dir)
-        r = subprocess.run(f'./src/hlsyn.exe {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}', capture_output=True)
+        if is_windows():
+            shell=False
+        else:
+            shell=True
+        r = subprocess.run(f'./src/hlsyn.exe {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}', shell=shell, capture_output=True)
         if r.returncode != self.error_levels[idx]:
             self.status.append("Error: Incorrect ErrorLevel")
             return
