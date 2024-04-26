@@ -253,7 +253,7 @@ class validationSuite:
         print()
         if self.skip_vivado:
             print(f'{Fore.YELLOW}Warning: No vivado validation performed. ' \
-                f'Copy to machine with vivado and rerun with --vivado-only flag{Style.RESET_ALL}')
+                f'Copy to machine with vivado and rerun with --vivado-only flag{Style.RESET_ALL}\n')
          
     def get_git_hash(self):
         return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('ascii').strip()
@@ -282,10 +282,10 @@ class validationSuite:
             lines = f.readlines()
             if (git_hash != lines[0]):
                 print(f'{Fore.YELLOW}Warning: Mismatch in git hash ' \
-                    f'between local and remote machine{Style.RESET_ALL}')
+                    f'between local and remote machine{Style.RESET_ALL}\n')
             elif (is_git_repo_dirty or len(lines) > 1):
                 print(f'{Fore.YELLOW}Warning: Either local or remote ' \
-                    f'machine contain uncommitted changes{Style.RESET_ALL}')
+                    f'machine contain uncommitted changes{Style.RESET_ALL}\n')
                     
     def run(self):
         self.load_tests()
