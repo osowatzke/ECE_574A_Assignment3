@@ -78,10 +78,10 @@ The session server does not have an installation of vivado. However, the test au
 
 On the server, run the following command:
 
-`python ./scripts/validate_code.py --skip-vivado'
+`python ./scripts/validate_code.py --skip-vivado`
 
 Then, copy the regression directory from the server to your local machine.
 
 Next on the local machine, run the following command:
 
-`python ./scripts/validate_code.py --vivado-only'
+`python ./scripts/validate_code.py --vivado-only`
