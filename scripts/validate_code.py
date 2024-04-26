@@ -187,10 +187,12 @@ class validationSuite:
         else:
             os.chdir(self.build_dir)
             if is_windows():
+                cmd='./src/hlsyn.exe'
                 shell=False
             else:
+                cmd='./src/hlsyn'
                 shell=True
-            r = subprocess.run(f'./src/hlsyn.exe {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}', shell=shell, capture_output=True)
+            r = subprocess.run(f'{cmd} {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}', shell=shell, capture_output=True)
             if r.returncode != self.error_levels[idx]:
                 self.status.append(RunStatus.BAD_ERROR_LEVEL)
                 return
