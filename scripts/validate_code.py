@@ -1,6 +1,7 @@
 
 import argparse
 from colorama import Fore, Style, init
+from enum import Enum
 import psutil
 import os
 import pandas
@@ -14,8 +15,17 @@ if psutil.Process(os.getpid()).parent().name() == 'cmd.exe':
 def is_windows():
     return os.name == 'nt'
 
+class RunStatus(Enum):
+    NO_ERROR        = 0
+    BAD_ERROR_LEVEL = 1
+    BAD_ERROR_MSG   = 2
+    SEG_FAULT       = 3
+    NO_COMPILE      = 4
+    BAD_BEHAV       = 5
+        
 class validationSuite:
-    def __init__(self, skip_vivado=False):
+            
+    def __init__(self, skip_vivado=False, vivado_only=False):
         self.init_path = os.getcwd()
         self.class_path = os.path.dirname(__file__)
         self.project_dir = os.path.abspath(os.path.join(self.class_path,'..'))
@@ -23,16 +33,14 @@ class validationSuite:
         self.autogen_dir = os.path.join(self.project_dir,'verilog_files','autogen')
         self.mingw_path = self.get_mingw_path()
         self.skip_vivado = skip_vivado
+        self.vivado_only = vivado_only
         self.in_files = None
         self.latencies = None
         self.out_files = None
         self.error_levels = None
         self.error_messages = None
         self.test_names = None
-        self.status = None
-        
-    def is_windows(self):
-        return os.name == 'nt'
+        self.status = None        
         
     def get_mingw_path(self):
         if is_windows():
@@ -134,29 +142,45 @@ class validationSuite:
             shell=True
         r = subprocess.run(f'./src/hlsyn.exe {self.in_files[idx]} {self.latencies[idx]} {self.out_files[idx]}', shell=shell, capture_output=True)
         if r.returncode != self.error_levels[idx]:
-            self.status.append("Error: Incorrect ErrorLevel")
+            self.status.append(RunStatus.BAD_ERROR_LEVEL)
             return
         elif r.returncode != 0:
             cmd_output = r.stdout.decode().rstrip()
             if (cmd_output == self.error_messages[idx]):
-                self.status.append("Passed")
+                self.status.append(RunStatus.NO_ERROR)
             else:
-                self.status.append("Error: Incorrect ErrorMessage")
+                self.status.append(RunStatus.BAD_ERROR_MSG)
             return
         if not os.path.exists(self.out_files[idx]):
-            self.status.append("Error: Segmentation Fault")
+            self.status.append(RunStatus.SEG_FAULT)
             return
         if self.skip_vivado:
-            self.status.append("Passed")
+            self.status.append(RunStatus.NO_ERROR)
         else:
             os.chdir(self.project_dir)
             r = subprocess.run(f'vivado -mode batch -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}', shell=True)
             if r.returncode == 0:
-                self.status.append("Passed")
+                self.status.append(RunStatus.NO_ERROR)
             elif r.returncode == 1:
-                self.status.append("Error: Verilog Compilation Failed")
+                self.status.append(RunStatus.NO_COMPILE)
             else:
-                self.status.append("Error: Behavioral Simulation Failed")
+                self.status.append(RunStatus.BAD_BEHAV)
+
+    def get_status_printout(self, status):
+        if status == RunStatus.NO_ERROR:
+            return "Passed"
+        elif status == RunStatus.BAD_ERROR_LEVEL:
+            return "Error: Incorrect Error Level"
+        elif status == RunStatus.BAD_ERROR_MSG:
+            return "Error: Incorrect Error Message"
+        elif status == RunStatus.SEG_FAULT:
+            return "Error: Segmentation Fault"
+        elif status == RunStatus.NO_COMPILE:
+            return "Error: Verilog Compilation Failed"
+        elif status == RunStatus.BAD_BEHAV:
+            return "Error: Behavioral Simulation Failed"
+        else:
+            self.throw_error("Unrecognized run status")
             
     def print_results(self):
         print('\nTEST RESULTS:\n')
@@ -164,26 +188,41 @@ class validationSuite:
         print('%s' % ('-' * 60))
         for idx in range(len(self.test_names)):
             test_name = self.test_names[idx] + ".c"
-            if self.status[idx] == "Passed":
-                status = f'{Fore.GREEN}{self.status[idx]}{Style.RESET_ALL}'
+            status = self.get_status_printout(self.status[idx])
+            if self.status[idx] == RunStatus.NO_ERROR:
+                status = f'{Fore.GREEN}{status}{Style.RESET_ALL}'
             else:
-                status = f'{Fore.RED}{self.status[idx]}{Style.RESET_ALL}'
+                status = f'{Fore.RED}{status}{Style.RESET_ALL}'
             print(f'{test_name:20s} | {self.latencies[idx]:7d} | {status}')
         print()
         
     def run(self):
-        self.compile_code()
-        self.create_new_autogen_dir()
+        if not self.vivado_only:
+            self.compile_code()
+            self.create_new_autogen_dir()
         self.load_tests()
         self.run_tests()
         self.print_results()
         
 if __name__=="__main__":
+
     parser = argparse.ArgumentParser(
         prog="validate_code",
         description="Function validates execution and behavior of high-level synthesis tool")
-    parser.add_argument('-s', '--skip-vivado', action='store_true')
+        
+    parser.add_argument('-s', '--skip-vivado', action='store_true',
+        help='skip vivado step of code execution')
+        
+    parser.add_argument('-r', '--vivado-only', action='store_true',
+        help='only run vivado step of code execution')
+        
     args = parser.parse_args()
-    validation_suite = validationSuite(skip_vivado=args.skip_vivado)
+    if args.skip_vivado and args.vivado_only:
+        print('Error: Cannot run in both skip-vivado and vivado-only mode')
+        
+    validation_suite = validationSuite(
+        skip_vivado=args.skip_vivado,
+        vivado_only=args.vivado_only)
+        
     validation_suite.run()
     sys.exit(0)
