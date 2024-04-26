@@ -278,12 +278,10 @@ class validationSuite:
         git_log = os.path.join(self.regression_dir,'git.log')
         with open(git_log, 'r') as f:
             lines = f.readlines()
-            hash_match = False
-            if (git_hash == lines[0]):
-                hash_match = True
+            if (git_hash != lines[0]):
                 print(f'{Fore.YELLOW}Warning: Mismatch in git hash ' \
                     f'between local and remote machine{Style.RESET_ALL}')
-            if (is_git_repo_dirty or len(lines) > 1):
+            elif (is_git_repo_dirty or len(lines) > 1):
                 print(f'{Fore.YELLOW}Warning: Either local or remote ' \
                     f'machine contain uncommitted changes{Style.RESET_ALL}')
                     
