@@ -126,10 +126,12 @@ class validationSuite:
             self.status.append("Error: Behavioral Simulation Failed")
             
     def print_results(self):
-        print('\nTEST RESULTS:')
+        print('\nTEST RESULTS:\n')
+        print('%-20s | %-7s | %s' % ('Test Name', 'Latency', 'Result'))
+        print('%s' % ('-' * 60))
         for idx in range(len(self.test_names)):
             test_name = self.test_names[idx] + ".c"
-            print(f'{test_name:20s}: {self.status[idx]}')
+            print(f'{test_name:20s} | {self.latencies[idx]:7d} | {self.status[idx]}')
         print()
         
     def run(self):
