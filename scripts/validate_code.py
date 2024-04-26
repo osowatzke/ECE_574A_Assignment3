@@ -1,20 +1,23 @@
+
+import argparse
 import os
 import pandas
-import sys
-import subprocess
 import shutil
+import subprocess
+import sys
  
 def is_windows():
-    return os.name == 'nt':
+    return os.name == 'nt'
 
 class validationSuite:
-    def __init__(self):
+    def __init__(self, skip_vivado=False):
         self.init_path = os.getcwd()
         self.class_path = os.path.dirname(__file__)
         self.project_dir = os.path.abspath(os.path.join(self.class_path,'..'))
         self.build_dir = os.path.join(self.project_dir,'build')
         self.autogen_dir = os.path.join(self.project_dir,'verilog_files','autogen')
         self.mingw_path = self.get_mingw_path()
+        self.skip_vivado = skip_vivado
         self.in_files = None
         self.latencies = None
         self.out_files = None
@@ -61,7 +64,7 @@ class validationSuite:
                 self.throw_error("Failed to configure cmake")
         if is_windows():
             shell = False
-        else
+        else:
             shell = True
         r = subprocess.run('cmake ..', shell=shell)
         if r.returncode:
@@ -74,7 +77,7 @@ class validationSuite:
         self.configure_cmake()
         if is_windows():
             shell = False
-        else
+        else:
             shell = True
         r = subprocess.run('cmake --build .', shell=shell)
         if r.returncode:
@@ -138,16 +141,17 @@ class validationSuite:
         if not os.path.exists(self.out_files[idx]):
             self.status.append("Error: Segmentation Fault")
             return
-        os.chdir(self.project_dir)
-        print(os.getcwd())
-        print(f'vivado -mode batch -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}')
-        r = subprocess.run(f'vivado -mode batch -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}', shell=True)
-        if r.returncode == 0:
+        if self.skip_vivado:
             self.status.append("Passed")
-        elif r.returncode == 1:
-            self.status.append("Error: Verilog Compilation Failed")
         else:
-            self.status.append("Error: Behavioral Simulation Failed")
+            os.chdir(self.project_dir)
+            r = subprocess.run(f'vivado -mode batch -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}', shell=True)
+            if r.returncode == 0:
+                self.status.append("Passed")
+            elif r.returncode == 1:
+                self.status.append("Error: Verilog Compilation Failed")
+            else:
+                self.status.append("Error: Behavioral Simulation Failed")
             
     def print_results(self):
         print('\nTEST RESULTS:\n')
@@ -166,6 +170,11 @@ class validationSuite:
         self.print_results()
         
 if __name__=="__main__":
-    validation_suite = validationSuite()
+    parser = argparse.ArgumentParser(
+        prog="validate_code",
+        description="Function validates execution and behavior of high-level synthesis tool")
+    parser.add_argument('-s', '--skip-vivado', action='store_true')
+    args = parser.parse_args()
+    validation_suite = validationSuite(skip_vivado=args.skip_vivado)
     validation_suite.run()
     sys.exit(0)
