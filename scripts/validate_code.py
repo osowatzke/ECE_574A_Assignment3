@@ -214,7 +214,7 @@ class validationSuite:
             self.status.append(RunStatus.NO_ERROR)
         else:
             os.chdir(self.project_dir)
-            r = subprocess.run(f'vivado -mode batch -nolog -nojournal -source .\\scripts\\run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}', shell=True)
+            r = subprocess.run(f'vivado -mode batch -nolog -nojournal -source ./scripts/run_test.tcl -tclargs {self.test_names[idx]} {self.latencies[idx]}', shell=True)
             if r.returncode == 0:
                 self.status.append(RunStatus.NO_ERROR)
             elif r.returncode == 1:

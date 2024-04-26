@@ -71,3 +71,17 @@ Then, run the following command from the terminal:
 The output of the validation script should appear as follows:
 
 ![Validation Script Outputs](./images/test_results.png)
+
+# Running Test Automation Scripts on the Session Server
+
+The session server does not have an installation of vivado. However, the test automation script can still be run piecewise.
+
+On the server, run the following command:
+
+`python ./scripts/validate_code.py --skip-vivado'
+
+Then, copy the regression directory from the server to your local machine.
+
+Next on the local machine, run the following command:
+
+`python ./scripts/validate_code.py --vivado-only'
