@@ -2,7 +2,7 @@
 
 namespace HighLevelSynthesis
 {
-
+// Class constructor provides access to shared data manager
 AsapScheduler::AsapScheduler(DataManager* dataManager)
     : dataManager(dataManager) {}
 

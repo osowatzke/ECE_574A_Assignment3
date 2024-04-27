@@ -10,6 +10,7 @@ using namespace std;
 namespace HighLevelSynthesis
 {
 
+// Class constructor provides access to shared data manager
 FileParser::FileParser(DataManager* dataManager)
     : dataManager(dataManager) {}
 

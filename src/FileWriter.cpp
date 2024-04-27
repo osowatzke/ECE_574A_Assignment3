@@ -6,6 +6,7 @@
 namespace HighLevelSynthesis
 {
 
+// Class constructor provides access to shared data manager
 FileWriter::FileWriter(DataManager* dataManager)
     : dataManager(dataManager) {}
 

@@ -9,6 +9,7 @@ using namespace std;
 namespace HighLevelSynthesis
 {
 
+// Class constructor provides access to shared data manager
 FsmGenerator::FsmGenerator(DataManager* dataManager)
     : dataManager(dataManager) {}
 
