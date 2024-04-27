@@ -7,6 +7,8 @@ using namespace std;
 
 namespace HighLevelSynthesis
 {
+    // Class constructor creates the data manager and provides subclasses
+    // with pointer access to the data manager 
     HighLevelSynthesisTool::HighLevelSynthesisTool()
         : dataManager(DataManager())
         , fileParser(FileParser(&dataManager))
@@ -14,20 +16,28 @@ namespace HighLevelSynthesis
         , fsmGenerator(FsmGenerator(&dataManager))
         , fileWriter(FileWriter(&dataManager)) {}
 
-    // Dummy run function. Populate with actual function calls once they are created.
+    // Function runs the high level synthesis tool
     int HighLevelSynthesisTool::run(string cFile, int latency, string verilogFile)
     {
+        // Attempt to parse the C File, and return with error if parsing fails
         int retVal = fileParser.run(cFile);
         if (retVal)
         {
             return retVal;
         }
+
+        // Attempt to run Force Directed Scheduling. Providing latency - 1 instead
+        // of latency to account for transition time out of Wait state.
         retVal = scheduler.run(latency - 1);
         if (retVal)
         {
             return retVal;
         }
+
+        // Run the FSM Generator with the same latency constraint
         fsmGenerator.run(latency - 1);
+
+        // Write the verilog file and return the file writer's error level
         retVal = fileWriter.run(verilogFile);
         return retVal;
     }

@@ -7,7 +7,7 @@ using namespace std;
 
 namespace HighLevelSynthesis
 {
-
+// Class constructor provides access to shared data manager
 AlapScheduler::AlapScheduler(DataManager* dataManager)
     : dataManager(dataManager) {}
 

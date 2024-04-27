@@ -9,6 +9,7 @@
 namespace HighLevelSynthesis
 {
 
+// Class constructor provides access to shared data manager
 FDScheduler::FDScheduler(DataManager* dataManager)
     : dataManager(dataManager)
     , typeDistribution()

@@ -10,6 +10,7 @@ namespace HighLevelSynthesis
 {
     struct vertex;
 
+    // Structure defines an edge
     struct edge
     {
         vertex* src;
@@ -20,6 +21,7 @@ namespace HighLevelSynthesis
 
     struct hierarchy;
 
+    // Structure defines a vertex
     struct vertex
     {
         int asapTime = -1;
@@ -27,16 +29,18 @@ namespace HighLevelSynthesis
         int asapTestTime = -1;
         int alapTestTime = -1;
         int mobility = 0;
-        int time;
+        int time = -1;
         hierarchy* parent;
         VertexType type;
-        string operation; // Operation that will be implemented in HLSM
+        string operation;
         vector <edge*> inputs; 
         vector <edge*> outputs;
     };
 
     struct conditionalHierarchy;
 
+    // Structure defines a hierarchy which includes vertices and edges
+    // defined at top-level or T/F branch of conditional hierarchy
     struct hierarchy
     {
         conditionalHierarchy* parent;
@@ -45,6 +49,8 @@ namespace HighLevelSynthesis
         map<string, edge*> edges;
     };
 
+    // Structure defines a conditional hierarchy which includes
+    // T/F hierarchies instantianted within conditional hierarchy
     struct conditionalHierarchy
     {
         edge* condition;
@@ -55,6 +61,7 @@ namespace HighLevelSynthesis
 
     struct stateTransition;
 
+    // Structure defines a state
     struct state
     {
         int time;
@@ -64,6 +71,7 @@ namespace HighLevelSynthesis
         vector<stateTransition*> transitions;
     };
 
+    // Structure defines a state transition
     struct stateTransition
     {
         vector<string> condition;
@@ -71,11 +79,13 @@ namespace HighLevelSynthesis
         state* nextState;
     };
 
+    // Define time of each operation
     const int DIV_TIME = 3;
     const int ADD_TIME = 1;
     const int MUL_TIME = 2;
     const int LOGIC_TIME = 1;
 
+    // Inline function computes the vertex run time
     inline int getVertexRunTime(vertex* currVertex)
     {
         switch (currVertex->type)
@@ -94,6 +104,10 @@ namespace HighLevelSynthesis
         return 0;
     }
     
+    // Inline function computes the vertex end time.
+    // Note that function uses to the vertex time
+    // instead of the ASAP and ALAP time so it cannot
+    // be called by the ASAP and ALAP scheduler.
     inline int getVertexEndTime(vertex* currVertex)
     {
         int runTime = getVertexRunTime(currVertex);

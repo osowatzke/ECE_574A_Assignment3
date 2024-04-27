@@ -9,6 +9,7 @@ namespace HighLevelSynthesis
 {
     enum NetType{INPUT, OUTPUT, VARIABLE};
 
+    // Inline function converts net type to string
     inline NetType stringToNetType(string netString)
     {
         if (netString == "input")
@@ -25,6 +26,7 @@ namespace HighLevelSynthesis
         }
     }
 
+    // Structure defines an net (input, output, or variable)
     struct net
     {
         NetType type;
