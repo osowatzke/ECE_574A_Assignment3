@@ -295,8 +295,8 @@ class validationSuite:
             self.create_new_regression_dir()
         else:
             self.validate_regression_file()        
-        # self.run_tests()
-        # self.print_results()
+        self.run_tests()
+        self.print_results()
         if self.vivado_only:
             self.check_git_hash()
         else:
