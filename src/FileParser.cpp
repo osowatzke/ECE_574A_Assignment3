@@ -65,6 +65,11 @@ int FileParser::readLines(string filePath)
         // Read lines from input file
         while (getline(file, line))
         {
+            // Removing trailing carriage returns
+            // Read by Ubuntu on Windows
+            line.erase(remove(line.begin(), line.end(), '\r'), line.end());
+
+            // Append line onto array of strings
             lines.push_back(line);
         }
         file.close();
